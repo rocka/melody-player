@@ -37,6 +37,7 @@ class MelodyPlayer extends HTMLElement {
   background-color: rgba(0, 0, 0, 0.6);
 }
 :host .porgress div {
+  width: 0;
   height: inherit;
   position: absolute;
   transition: width 1s linear;
