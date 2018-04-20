@@ -1,0 +1,76 @@
+.melody-player {
+    display: flex;
+    align-items: center;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgb(221, 221, 221);
+    border-radius: 2px;
+    button {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        border-style: none;
+        margin: 0;
+        padding: 0;
+        outline: none;
+        cursor: pointer;
+        transition: background-color 0.5s;
+        &:hover {
+            transition: background-color 0.2s;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        &:active {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    }
+    .control-left {
+    }
+    .porgress {
+        cursor: pointer;
+        position: relative;
+        margin-left: 0.5rem;
+        flex-grow: 1;
+        height: 0.7rem;
+        color: teal;
+        background-color: rgba(0, 0, 0, 0.6);
+        div {
+            height: inherit;
+            position: absolute;
+            transition: width 1s linear;
+        }
+        #prog-load {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        #prog-play {
+            background-color: currentColor;
+            &::after {
+                content: " ";
+                position: absolute;
+                width: 2px;
+                height: inherit;
+                right: 0;
+                top: 0;
+                border: 0 solid white;
+                box-shadow: 0 0 0 transparent;
+                background-color: white;
+                transition: all 0.2s;
+            }
+        }
+        &:hover {
+            #prog-play::after {
+                cursor: pointer;
+                border-width: 6px 3px;
+                box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+                top: -6px;
+                right: -3px;
+            }
+        }
+    }
+    .timer {
+        margin-left: 0.5rem;
+    }
+    .control-right {
+        margin-left: 0.5rem;
+    }
+}
