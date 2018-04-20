@@ -9,6 +9,7 @@ class MelodyPlayer extends HTMLElement {
   border-radius: 2px;
 }
 :host button {
+  font-family: "Noto Color Emoji", sans-serif;
   display: inline-block;
   width: 2rem;
   height: 2rem;
@@ -26,6 +27,9 @@ class MelodyPlayer extends HTMLElement {
 }
 :host button:active {
   background-color: rgba(255, 255, 255, 0.8);
+}
+:host button::-moz-focus-inner {
+  border: 0;
 }
 :host .porgress {
   cursor: pointer;
@@ -280,12 +284,17 @@ class MelodyPlayer extends HTMLElement {
         const shadow = this.attachShadow({ mode: 'open' });
         const style = document.createElement('style');
         style.appendChild(document.createTextNode(MelodyPlayer.stylesheet));
+        /** @type {HTMLTemplateElement} */
+        const tmpl = document.getElementById('mldy-tmpl');
+        let dom = document.importNode(tmpl.content, true);
+        if (~navigator.userAgent.toLowerCase().indexOf('firefox')) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('melody-player');
+            wrapper.appendChild(dom);
+            dom = wrapper;
+            style.textContent = style.textContent.replace(/:host/g, '.melody-player');
+        }
         shadow.appendChild(style);
-        /** @type {Node} */
-        const dom = document
-            .getElementById('mldy-tmpl')
-            .content
-            .cloneNode(true);
         shadow.appendChild(dom);
         this.progressFull = shadow.getElementById('prog-full');
         this.progressPlay = shadow.getElementById('prog-play');
@@ -354,4 +363,4 @@ class MelodyPlayer extends HTMLElement {
     }
 }
 
-window.customElements.define('melody-player', MelodyPlayer, { extends: 'div' });
+window.customElements.define('melody-player', MelodyPlayer);
