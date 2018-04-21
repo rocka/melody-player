@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Melody Player Demo</title>
+    <script src="https://rawgit.com/weirongxu/lrc-kit/master/dist/lrc-kit.min.js"></script>
     <script src="index.js"></script>
     <!-- <link rel="stylesheet/less" type="text/css" href="styles.less" /> -->
     <!-- <script src="https://cdn.bootcss.com/less.js/3.0.1/less.js"></script> -->
@@ -43,9 +44,9 @@
     </template>
     <main>
         <melody-player>
-            <audio src="assets/22760378.mp3" lrc="assets/22760378.lrc"></audio>
-            <audio src="assets/22716849.mp3" lrc="assets/22716849.lrc"></audio>
-            <audio src="assets/27853205.mp3" lrc="assets/27853205.lrc"></audio>
+            <audio src="assets/22760378.mp3" data-lrc="assets/22760378.lrc.jp.txt" data-sub-lrc="assets/22760378.lrc.zh.txt"></audio>
+            <audio src="assets/22716849.mp3" data-lrc="assets/22716849.lrc.jp.txt" data-sub-lrc="assets/22716849.lrc.zh.txt"></audio>
+            <audio src="assets/27853205.mp3" data-lrc="assets/27853205.lrc.jp.txt" data-sub-lrc="assets/27853205.lrc.zh.txt"></audio>
         </melody-player>
     </main>
 </body>
