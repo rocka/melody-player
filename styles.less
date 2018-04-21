@@ -1,81 +1,96 @@
 .melody-player {
-    display: flex;
-    align-items: center;
+    display: block;
+    font-family: sans-serif;
     margin: 0.5rem;
     padding: 0.5rem;
     background-color: rgb(221, 221, 221);
     border-radius: 2px;
-    button {
-        font-family: "Noto Color Emoji", sans-serif;
-        display: inline-block;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        border-style: none;
-        margin: 0;
-        padding: 0;
-        outline: none;
-        cursor: pointer;
-        transition: background-color 0.5s;
-        &:hover {
-            transition: background-color 0.2s;
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-        &:active {
-            background-color: rgba(255, 255, 255, 0.8);
-        }
-        &::-moz-focus-inner {
-            border: 0;
+    .display {
+        font-size: 0.9rem;
+        height: 130px;
+        overflow: hidden;
+        .lyric {
+            .lrc-line{
+                white-space: pre;
+                text-align: center;
+            }
         }
     }
-    .control-left {
-    }
-    .porgress {
-        cursor: pointer;
-        position: relative;
-        margin-left: 0.5rem;
-        flex-grow: 1;
-        height: 0.7rem;
-        color: teal;
-        background-color: rgba(0, 0, 0, 0.6);
-        div {
-            width: 0;
-            height: inherit;
-            position: absolute;
-            transition: width 1s linear;
+    .control {
+        display: flex;
+        align-items: center;
+        button {
+            font-family: "Noto Color Emoji";
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            border-style: none;
+            margin: 0;
+            padding: 0;
+            outline: none;
+            cursor: pointer;
+            transition: background-color 0.5s;
+            &:hover {
+                transition: background-color 0.2s;
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+            &:active {
+                background-color: rgba(255, 255, 255, 0.8);
+            }
+            &::-moz-focus-inner {
+                border: 0;
+            }
         }
-        #prog-load {
-            background-color: rgba(255, 255, 255, 0.3);
+        .control-left {
         }
-        #prog-play {
-            background-color: currentColor;
-            &::after {
-                content: " ";
-                position: absolute;
-                width: 2px;
+        .porgress {
+            cursor: pointer;
+            position: relative;
+            margin-left: 0.5rem;
+            flex-grow: 1;
+            height: 0.7rem;
+            color: teal;
+            background-color: rgba(0, 0, 0, 0.6);
+            div {
+                width: 0;
                 height: inherit;
-                right: 0;
-                top: 0;
-                border: 0 solid white;
-                box-shadow: 0 0 0 transparent;
-                background-color: white;
-                transition: all 0.2s;
+                position: absolute;
+                transition: width 1s linear;
+            }
+            #prog-load {
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+            #prog-play {
+                background-color: currentColor;
+                &::after {
+                    content: " ";
+                    position: absolute;
+                    width: 2px;
+                    height: inherit;
+                    right: 0;
+                    top: 0;
+                    border: 0 solid white;
+                    box-shadow: 0 0 0 transparent;
+                    background-color: white;
+                    transition: all 0.2s;
+                }
+            }
+            &:hover {
+                #prog-play::after {
+                    cursor: pointer;
+                    border-width: 6px 3px;
+                    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+                    top: -6px;
+                    right: -3px;
+                }
             }
         }
-        &:hover {
-            #prog-play::after {
-                cursor: pointer;
-                border-width: 6px 3px;
-                box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-                top: -6px;
-                right: -3px;
-            }
+        .timer {
+            margin-left: 0.5rem;
         }
-    }
-    .timer {
-        margin-left: 0.5rem;
-    }
-    .control-right {
-        margin-left: 0.5rem;
+        .control-right {
+            margin-left: 0.5rem;
+        }
     }
 }
