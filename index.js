@@ -1,15 +1,28 @@
 class MelodyPlayer extends HTMLElement {
     static get stylesheet() {
         return (`:host {
-  display: flex;
-  align-items: center;
+  display: block;
+  font-family: sans-serif;
   margin: 0.5rem;
   padding: 0.5rem;
   background-color: #dddddd;
   border-radius: 2px;
 }
-:host button {
-  font-family: "Noto Color Emoji", sans-serif;
+:host .display {
+  font-size: 0.9rem;
+  height: 130px;
+  overflow: hidden;
+}
+:host .display .lyric .lrc-line {
+    white-space: pre;
+  text-align: center;
+}
+:host .control {
+  display: flex;
+  align-items: center;
+}
+:host .control button {
+  font-family: "Noto Color Emoji";
   display: inline-block;
   width: 2rem;
   height: 2rem;
@@ -21,17 +34,17 @@ class MelodyPlayer extends HTMLElement {
   cursor: pointer;
   transition: background-color 0.5s;
 }
-:host button:hover {
+:host .control button:hover {
   transition: background-color 0.2s;
   background-color: rgba(255, 255, 255, 0.3);
 }
-:host button:active {
+:host .control button:active {
   background-color: rgba(255, 255, 255, 0.8);
 }
-:host button::-moz-focus-inner {
+:host .control button::-moz-focus-inner {
   border: 0;
 }
-:host .porgress {
+:host .control .porgress {
   cursor: pointer;
   position: relative;
   margin-left: 0.5rem;
@@ -40,19 +53,19 @@ class MelodyPlayer extends HTMLElement {
   color: teal;
   background-color: rgba(0, 0, 0, 0.6);
 }
-:host .porgress div {
+:host .control .porgress div {
   width: 0;
   height: inherit;
   position: absolute;
   transition: width 1s linear;
 }
-:host .porgress #prog-load {
+:host .control .porgress #prog-load {
   background-color: rgba(255, 255, 255, 0.3);
 }
-:host .porgress #prog-play {
+:host .control .porgress #prog-play {
   background-color: currentColor;
 }
-:host .porgress #prog-play::after {
+:host .control .porgress #prog-play::after {
   content: " ";
   position: absolute;
   width: 2px;
@@ -64,20 +77,19 @@ class MelodyPlayer extends HTMLElement {
   background-color: white;
   transition: all 0.2s;
 }
-:host .porgress:hover #prog-play::after {
+:host .control .porgress:hover #prog-play::after {
   cursor: pointer;
   border-width: 6px 3px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
   top: -6px;
   right: -3px;
 }
-:host .timer {
+:host .control .timer {
   margin-left: 0.5rem;
 }
-:host .control-right {
+:host .control .control-right {
   margin-left: 0.5rem;
-}
-:host[data-playing] { background-color: red; }`
+}`
         );
     }
 
@@ -162,7 +174,72 @@ class MelodyPlayer extends HTMLElement {
         if (this.audios.length > 0) {
             this.playIndex = 0;
             this.updateTimerTotal();
+            this.fetchLyric()
+                .then(() => this.renderLyric());
         }
+    }
+
+    /**
+     * fetch lrc to au props
+     * @returns {Promise<void>}
+     */
+    fetchLyric() {
+        const au = this.audios[this.playIndex];
+        /** @type {{lrc:string; subLrc:string}} */
+        const urls = {
+            lrc: au.dataset['lrc'],
+            subLrc: au.dataset['subLrc']
+        };
+        return Promise.all(Object.entries(urls).map(([k, v]) => {
+            if (v) {
+                return fetch(v)
+                    .then(r => r.text())
+                    .then(t => au[k] = window.LrcKit.Lrc.parse(t))
+                    .catch(e => console.error('[MelodyPlayer] Cannot fetch lrc:', e));
+            } else {
+                au[k] = '';
+            }
+        }));
+    }
+
+    /**
+     * render to lrc element
+     */
+    renderLyric() {
+        const au = this.audios[this.playIndex];
+        /** @type {Array.<{timestamp:number;content:string}>} */
+        const lrc = au.lrc.lyrics;
+        lrc.sort((a, b) => a.timestamp - b.timestamp);
+        /** @type {Array.<{timestamp:number;content:string}>} */
+        const subLrc = au.subLrc.lyrics;
+        subLrc.sort((a, b) => a.timestamp - b.timestamp);
+        /** @type {Array.<{timestamp:number;content:string}>} */
+        const lyrics = [];
+        let i = 0, j = 0;
+        while (i < lrc.length && j < subLrc.length) {
+            const l = lrc[i], sl = subLrc[j];
+            if (l.timestamp === sl.timestamp) {
+                lyrics.push({ timestamp: l.timestamp, content: `${l.content}\n${sl.content}` });
+                i++ , j++;
+            } else if (l.timestamp > sl.timestamp) {
+                lyrics.push({ timestamp: sl.timestamp, content: sl.content });
+                j++;
+            } else if (sl.timestamp > l.timestamp) {
+                lyrics.push({ timestamp: l.timestamp, content: l.content });
+                i++;
+            }
+        }
+        const frag = document.createDocumentFragment();
+        for (const line of lyrics) {
+            const elm = document.createElement('p');
+            elm.classList.add('lrc-line');
+            elm.timestamp = line.timestamp;
+            elm.dataset['timestamp'] = line.timestamp;
+            elm.appendChild(document.createTextNode(line.content));
+            frag.appendChild(elm);
+        }
+        this.lrcContainer.innerHTML = '';
+        this.lrcContainer.appendChild(frag);
     }
 
     handleAudioPlaying() {
@@ -178,7 +255,16 @@ class MelodyPlayer extends HTMLElement {
         const au = this.audios[this.playIndex];
         const evInit = { detail: { audio: au } };
         if (this.audios[this.playIndex].currentTime < 1e-9) {
-            this.handleAudioStart();
+            if (this.firstPlay) {
+                this.firstPlay = false;
+            } else {
+                this.fetchLyric().then(() => this.renderLyric());
+            }
+            this.updateTimerTotal();
+            this.syncProgress();
+            this.audios[this.playIndex].addEventListener('ended', () => {
+                this.dispatchEvent(new CustomEvent('audioend'));
+            });
         }
         return au.play().then(() => {
             this.playing = true;
@@ -243,14 +329,6 @@ class MelodyPlayer extends HTMLElement {
         this._play();
     }
 
-    handleAudioStart() {
-        this.updateTimerTotal();
-        this.syncProgress();
-        this.audios[this.playIndex].addEventListener('ended', () => {
-            this.dispatchEvent(new CustomEvent('audioend'));
-        });
-    }
-
     handleAudioEnd() {
         if (this.nextPlayIndex()) {
             this._play();
@@ -296,6 +374,7 @@ class MelodyPlayer extends HTMLElement {
         }
         shadow.appendChild(style);
         shadow.appendChild(dom);
+        this.lrcContainer = shadow.getElementById('lrc-container');
         this.progressFull = shadow.getElementById('prog-full');
         this.progressPlay = shadow.getElementById('prog-play');
         this.progressLoad = shadow.getElementById('prog-load');
@@ -320,6 +399,7 @@ class MelodyPlayer extends HTMLElement {
 
     constructor() {
         super();
+        this.firstPlay = true;
         this.playing = false;
         this.playIndex = 0;
         this.loopMode = MelodyPlayer.LoopMode.Once;
@@ -327,6 +407,10 @@ class MelodyPlayer extends HTMLElement {
         this.progressTimeout = null;
         /** @type {HTMLAudioElement[]} */
         this.audios = [];
+        /** @type {Function} */
+        this.audioEndListener = null;
+        /** @type {HTMLDivElement} */
+        this.lrcContainer = null;
         /** @type {HTMLDivElement} */
         this.progressFull = null;
         /** @type {HTMLDivElement} */
