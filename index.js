@@ -296,10 +296,6 @@ class MelodyPlayer extends HTMLElement {
 
     nextLyricIndex() {
         const au = this.audios[this.playIndex];
-        const first = this.lyrics[0].timestamp || +this.lyrics[0].dataset['timestamp'];
-        if (au.currentTime < first) {
-            return -1;
-        }
         const ly = this.lyrics[this.lyricIndex];
         const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
         let loopStart = this.lyricIndex;
@@ -351,6 +347,7 @@ class MelodyPlayer extends HTMLElement {
             if (this.firstPlay) {
                 this.firstPlay = false;
             } else {
+                // TODO: loading indicator for lyric
                 this.fetchLyric().then(() => this.renderLyric());
             }
             this.updateTimerTotal();
