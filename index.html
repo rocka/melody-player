@@ -3,15 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta content="▶️🔀🔁🔂⏸️⏺️⏏📃📜📄📰">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Melody Player Demo</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet/less" type="text/css" href="styles.less" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/3.0.2/less.min.js" ></script>
     <script src="https://rawgit.com/weirongxu/lrc-kit/master/dist/lrc-kit.min.js"></script>
     <script src="index.js"></script>
-    <!-- <link rel="stylesheet/less" type="text/css" href="styles.less" /> -->
-    <!-- <script src="https://cdn.bootcss.com/less.js/3.0.1/less.js"></script> -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
     body {
         margin: 0;
@@ -19,7 +18,6 @@
     main {
         margin: 1rem auto;
         padding: 1rem;
-        height: 600px;
         max-width: 900px;
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
     }
@@ -49,6 +47,38 @@
         </div>
     </template>
     <main>
+        <h1>MelodyPlayer Demo</h1>
+        <hr>
+        <h2>Static HTML Template</h2>
+        <div class="melody-player">
+            <div class="display">
+                <div class="lyric" style="transform:translateY(-53.5px);">
+                    <p class="lrc-line"><br></p>
+                    <p class="lrc-line">半径85センチが　この手の届く距離<br>半径85公分是这只手能到达的距离</p>
+                    <p class="lrc-line active">今から振り回しますので　離れていてください<br>现在要开始挥了　请快点远离</p>
+                    <p class="lrc-line"></p>
+                    <p class="lrc-line">ダブルラリアット<br>double lariat</p>
+                    <p class="lrc-line">唄：巡音ルカ<br>演唱：ruka酱</p>
+                    <p class="lrc-line"></p>
+                    <p class="lrc-line"></p>
+                    <p class="lrc-line">ただ回る事が楽しかった　このままでいたかった<br>只是觉得一直转动很快乐　想要保持这样</p>
+                </div>
+            </div>
+            <div class="control">
+                <div class="control-left">
+                    <button>skip_previous</button>
+                    <button data-play="play_arrow" data-pause="pause">stop</button>
+                    <button>skip_next</button>
+                </div>
+                <div class="porgress"><div class="load" style="width:66%;"></div><div class="play" style="width:33%;"></div></div>
+                <div class="timer"><span>0:00</span> / <span>0:00</span></div>
+                <div class="control-right">
+                    <button data-once="subdirectory_arrow_right" data-single="repeat_one" data-list="repeat" data-shuffle="shuffle">cancel</button>
+                    <button>keyboard_capslock</button>
+                </div>
+            </div>
+        </div>
+        <h2>WebComponent</h2>
         <melody-player>
             <audio src="assets/22760378.mp3" data-lrc="assets/22760378.lrc.jp.txt" data-sub-lrc="assets/22760378.lrc.zh.txt"></audio>
             <audio src="assets/22716849.mp3" data-lrc="assets/22716849.lrc.jp.txt" data-sub-lrc="assets/22716849.lrc.zh.txt"></audio>
