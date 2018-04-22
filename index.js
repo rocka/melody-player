@@ -14,7 +14,7 @@ class MelodyPlayer extends HTMLElement {
   overflow: hidden;
 }
 :host .display .lyric {
-  transform: translateY(28px);
+  transform: translateY(63px);
 }
 :host .display .lyric .lrc-line {
   margin: 1rem 0;
@@ -251,6 +251,10 @@ class MelodyPlayer extends HTMLElement {
 
     nextLyricIndex() {
         const au = this.audios[this.playIndex];
+        const first = this.lyrics[0].timestamp || +ly.dataset['timestamp'];
+        if (au.currentTime < first) {
+            return -1;
+        }
         const ly = this.lyrics[this.lyricIndex];
         const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
         let loopStart = this.lyricIndex;
@@ -270,6 +274,9 @@ class MelodyPlayer extends HTMLElement {
     syncLyric() {
         const nextIndex = this.nextLyricIndex();
         if (nextIndex !== this.lyricIndex) {
+            if (nextIndex === -1) {
+                this.containerLyric.style.transform = '';
+            } else {
             this.lyrics[this.lyricIndex].classList.remove('active');
             this.lyrics[nextIndex].classList.add('active');
             let offset = this.lyrics[nextIndex].offsetTop
@@ -278,6 +285,7 @@ class MelodyPlayer extends HTMLElement {
             this.containerLyric.style.transform = `translateY(calc(-1rem - ${offset}px))`;
             this.lyricIndex = nextIndex;
         }
+    }
     }
 
     handleAudioPlaying() {
