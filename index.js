@@ -3,23 +3,23 @@ class MelodyPlayer extends HTMLElement {
         return (`:host {
   display: block;
   font-family: sans-serif;
-  margin: 0.5rem;
-  padding: 0.5rem;
+  margin: 8px;
+  padding: 8px;
   color: #abb2bf;
   background-color: #282c34;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 :host .display {
-  font-size: 0.9rem;
-  height: 130px;
+  font-size: 14px;
+  height: 150px;
   overflow: hidden;
 }
 :host .display .lyric {
-  transform: translateY(63px);
+  transform: translateY(0);
   transition: transform .5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 :host .display .lyric .lrc-line {
-  margin: 1rem 0;
+  margin: 16px 0;
   white-space: pre-wrap;
   text-align: center;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
@@ -37,8 +37,8 @@ class MelodyPlayer extends HTMLElement {
   font-family: "Material Icons";
   font-size: 20px;
   display: inline-block;
-  width: 2rem;
-  height: 2rem;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border-style: none;
   margin: 0;
@@ -61,9 +61,9 @@ class MelodyPlayer extends HTMLElement {
 :host .control .porgress {
   cursor: pointer;
   position: relative;
-  margin-left: 0.5rem;
+  margin-left: 8px;
   flex-grow: 1;
-  height: 0.7rem;
+  height: 12px;
   color: #61aeee;
   background-color: rgba(0, 0, 0, 0.6);
 }
@@ -72,6 +72,9 @@ class MelodyPlayer extends HTMLElement {
   height: inherit;
   position: absolute;
   transition: width 1s linear;
+}
+:host .control .porgress div.peek {
+  transition: width .2s;
 }
 :host .control .porgress .load {
   background-color: rgba(255, 255, 255, 0.3);
@@ -100,10 +103,10 @@ class MelodyPlayer extends HTMLElement {
   right: -3px;
 }
 :host .control .timer {
-  margin-left: 0.5rem;
+  margin-left: 8px;
 }
 :host .control .control-right {
-  margin-left: 0.5rem;
+  margin-left: 8px;
 }`
         );
     }
@@ -151,15 +154,16 @@ class MelodyPlayer extends HTMLElement {
     }
 
     syncProgress() {
-        this.progressPlay.style.transition = 'width 0.2s';
-        this.progressLoad.style.transition = 'width 0.2s';
+        /**
+         * @param {HTMLDivElement} elm
+         */
+        function tiggerPeek(elm, t = 0.2) {
+            elm.classList.add('peek');
+            setTimeout(() =>  elm.classList.remove('peek') , t * 1000);
+        }
+        tiggerPeek(this.progressPlay)
+        tiggerPeek(this.progressLoad)
         this.updateProgress();
-        setTimeout(() => {
-            this.progressPlay.style.transition = '';
-        }, 0.2 * 1000);
-        setTimeout(() => {
-            this.progressLoad.style.transition = '';
-        }, 0.2 * 1000);
     }
 
     updateTimerTotal() {
@@ -230,7 +234,7 @@ class MelodyPlayer extends HTMLElement {
         const subLrc = au.subLrc.lyrics;
         subLrc.sort((a, b) => a.timestamp - b.timestamp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [], lyricElms = [];
+        const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
         let i = 0, j = 0;
         while (i < lrc.length && j < subLrc.length) {
             const l = lrc[i], sl = subLrc[j];
@@ -262,7 +266,7 @@ class MelodyPlayer extends HTMLElement {
 
     nextLyricIndex() {
         const au = this.audios[this.playIndex];
-        const first = this.lyrics[0].timestamp || +ly.dataset['timestamp'];
+        const first = this.lyrics[0].timestamp || +this.lyrics[0].dataset['timestamp'];
         if (au.currentTime < first) {
             return -1;
         }
@@ -285,15 +289,16 @@ class MelodyPlayer extends HTMLElement {
     syncLyric() {
         const nextIndex = this.nextLyricIndex();
         if (nextIndex !== this.lyricIndex) {
-            if (nextIndex === -1) {
+            if (nextIndex === 0) {
                 this.containerLyric.style.transform = '';
             } else {
                 this.lyrics[this.lyricIndex].classList.remove('active');
                 this.lyrics[nextIndex].classList.add('active');
-                let offset = this.lyrics[nextIndex].offsetTop
+                let offset = 16
+                    + this.lyrics[nextIndex].offsetTop
                     - this.containerDisplay.clientHeight / 2
                     + this.lyrics[nextIndex].clientHeight / 2;
-                this.containerLyric.style.transform = `translateY(calc(-1rem - ${offset}px))`;
+                this.containerLyric.style.transform = `translateY(-${offset}px)`;
                 this.lyricIndex = nextIndex;
             }
         }
