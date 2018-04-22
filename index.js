@@ -13,8 +13,12 @@ class MelodyPlayer extends HTMLElement {
   height: 130px;
   overflow: hidden;
 }
+:host .display .lyric {
+  transform: translateY(28px);
+}
 :host .display .lyric .lrc-line {
-    white-space: pre;
+  margin: 1rem 0;
+  white-space: pre;
   text-align: center;
 }
 :host .control {
@@ -214,7 +218,7 @@ class MelodyPlayer extends HTMLElement {
         const subLrc = au.subLrc.lyrics;
         subLrc.sort((a, b) => a.timestamp - b.timestamp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [];
+        const lyrics = [], lyricElms = [];
         let i = 0, j = 0;
         while (i < lrc.length && j < subLrc.length) {
             const l = lrc[i], sl = subLrc[j];
@@ -237,13 +241,47 @@ class MelodyPlayer extends HTMLElement {
             elm.dataset['timestamp'] = line.timestamp;
             elm.appendChild(document.createTextNode(line.content));
             frag.appendChild(elm);
+            lyricElms.push(elm);
         }
-        this.lrcContainer.innerHTML = '';
-        this.lrcContainer.appendChild(frag);
+        this.lyrics = lyricElms;
+        this.containerLyric.innerHTML = '';
+        this.containerLyric.appendChild(frag);
+    }
+
+    nextLyricIndex() {
+        const au = this.audios[this.playIndex];
+        const ly = this.lyrics[this.lyricIndex];
+        const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
+        let loopStart = this.lyricIndex;
+        if (au.currentTime < lyricTime) {
+            loopStart = 0;
+        }
+        for (let i = loopStart; i < this.lyrics.length; i++) {
+            const elm = this.lyrics[i];
+            const time = elm.timestamp || +elm.dataset['timestamp'];
+            if (time > au.currentTime) {
+                return !i ? 0 : i - 1;
+            }
+        }
+        return this.lyrics.length - 1;
+    }
+
+    syncLyric() {
+        const nextIndex = this.nextLyricIndex();
+        if (nextIndex !== this.lyricIndex) {
+            this.lyrics[this.lyricIndex].classList.remove('active');
+            this.lyrics[nextIndex].classList.add('active');
+            let offset = this.lyrics[nextIndex].offsetTop
+                - this.containerDisplay.clientHeight / 2
+                + this.lyrics[nextIndex].clientHeight / 2;
+            this.containerLyric.style.transform = `translateY(calc(-1rem - ${offset}px))`;
+            this.lyricIndex = nextIndex;
+        }
     }
 
     handleAudioPlaying() {
         this.updateProgress();
+        this.syncLyric();
         this.progressTimeout = setTimeout(() => {
             if (this.playing) {
                 this.handleAudioPlaying();
@@ -324,6 +362,9 @@ class MelodyPlayer extends HTMLElement {
      * @param {number} pos should be next, or prev
      */
     handleNext(pos = 1) {
+        if (this.firstPlay) {
+            this.firstPlay = false;
+        }
         this._pause(0);
         this.nextPlayIndex(pos);
         this._play();
@@ -356,6 +397,7 @@ class MelodyPlayer extends HTMLElement {
         const progress = (ev.clientX - start) / this.progressFull.offsetWidth;
         au.currentTime = progress * au.duration;
         this.syncProgress();
+        this.syncLyric();
     }
 
     render() {
@@ -374,7 +416,8 @@ class MelodyPlayer extends HTMLElement {
         }
         shadow.appendChild(style);
         shadow.appendChild(dom);
-        this.lrcContainer = shadow.getElementById('lrc-container');
+        this.containerDisplay = shadow.getElementById('container-disp');
+        this.containerLyric = shadow.getElementById('container-lrc');
         this.progressFull = shadow.getElementById('prog-full');
         this.progressPlay = shadow.getElementById('prog-play');
         this.progressLoad = shadow.getElementById('prog-load');
@@ -401,16 +444,23 @@ class MelodyPlayer extends HTMLElement {
         super();
         this.firstPlay = true;
         this.playing = false;
+        /** @type {HTMLAudioElement[]} */
+        this.audios = [];
         this.playIndex = 0;
+        /** @type {HTMLParagraphElement[]} */
+        this.lyrics = null;
+        this.lyricIndex = 0;
         this.loopMode = MelodyPlayer.LoopMode.Once;
         /** @type {number} */
         this.progressTimeout = null;
-        /** @type {HTMLAudioElement[]} */
-        this.audios = [];
         /** @type {Function} */
         this.audioEndListener = null;
         /** @type {HTMLDivElement} */
-        this.lrcContainer = null;
+        this.containerLyric = null;
+        /** @type {HTMLDivElement} */
+        this.containerDisplay = null;
+        /** @type {HTMLDivElement} */
+        this.containerLyric = null;
         /** @type {HTMLDivElement} */
         this.progressFull = null;
         /** @type {HTMLDivElement} */
