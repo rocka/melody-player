@@ -10,6 +10,7 @@ class MelodyPlayer extends HTMLElement {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 :host .display {
+  position: relative;
   font-size: 14px;
   height: 150px;
   overflow: hidden;
@@ -27,6 +28,34 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .display .lyric .lrc-line.active {
   color: white;
+}
+:host .display .shadow {
+  content: " ";
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 45px;
+  z-index: 1;
+}
+:host .display::before {
+  content: " ";
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 45px;
+  z-index: 1;
+  top: 0;
+  background-image: linear-gradient(#282c34, transparent);
+}
+:host .display::after {
+  content: " ";
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 45px;
+  z-index: 1;
+  bottom: 0;
+  background-image: linear-gradient(transparent, #282c34);
 }
 :host .control {
   display: flex;
@@ -103,6 +132,7 @@ class MelodyPlayer extends HTMLElement {
   right: -3px;
 }
 :host .control .timer {
+  font-size: 14px;
   margin-left: 8px;
 }
 :host .control .control-right {
