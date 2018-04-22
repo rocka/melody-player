@@ -194,6 +194,7 @@ class MelodyPlayer extends HTMLElement {
             lrc: au.dataset['lrc'],
             subLrc: au.dataset['subLrc']
         };
+        // TODO: cache lyric; retry when cache invalid
         return Promise.all(Object.entries(urls).map(([k, v]) => {
             if (v) {
                 return fetch(v)
@@ -300,9 +301,6 @@ class MelodyPlayer extends HTMLElement {
             }
             this.updateTimerTotal();
             this.syncProgress();
-            this.audios[this.playIndex].addEventListener('ended', () => {
-                this.dispatchEvent(new CustomEvent('audioend'));
-            });
         }
         return au.play().then(() => {
             this.playing = true;
@@ -371,15 +369,24 @@ class MelodyPlayer extends HTMLElement {
     }
 
     handleAudioEnd() {
-        if (this.nextPlayIndex()) {
+        this._pause(0);
+        this.lyricIndex = 0;
+        this.containerLyric.style.transform = '';
+        const shouldContinue = this.nextPlayIndex();
+        if (shouldContinue) {
             this._play();
         } else {
             this.playing = false;
             this.updateBtnPlay();
-            this.updateTimerTotal();
-            this.updateProgress();
             this.dispatchEvent(new CustomEvent('playend'));
         }
+        this.updateTimerTotal();
+        this.syncProgress();
+    }
+
+    handlePlayEnd() {
+        this.renderLyric();
+        this.firstPlay = true;
     }
 
     handleLoopMode() {
@@ -433,6 +440,7 @@ class MelodyPlayer extends HTMLElement {
     event() {
         this.addEventListener('ready', () => this.handlePlayerReady());
         this.addEventListener('audioend', () => this.handleAudioEnd());
+        this.addEventListener('playend', () => this.handlePlayEnd());
         this.btnPlay.addEventListener('click', () => this.handlePlayOrPause());
         this.btnPrev.addEventListener('click', () => this.handleNext(-1));
         this.btnNext.addEventListener('click', () => this.handleNext(1));
@@ -484,7 +492,13 @@ class MelodyPlayer extends HTMLElement {
         setTimeout(() => {
             this.audios = Array
                 .from(this.children)
-                .filter(elm => elm instanceof HTMLAudioElement);
+                .filter(elm => elm instanceof HTMLAudioElement)
+                .map(elm => {
+                    elm.addEventListener('ended', () => {
+                        this.dispatchEvent(new CustomEvent('audioend'));
+                    });
+                    return elm;
+                });
             const evInit = { detail: { audios: this.audios } };
             this.dispatchEvent(new CustomEvent('ready', evInit));
         }, 0);
