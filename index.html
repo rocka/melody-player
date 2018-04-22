@@ -11,6 +11,7 @@
     <script src="index.js"></script>
     <!-- <link rel="stylesheet/less" type="text/css" href="styles.less" /> -->
     <!-- <script src="https://cdn.bootcss.com/less.js/3.0.1/less.js"></script> -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
     body {
         margin: 0;
@@ -32,18 +33,18 @@
         </div>
         <div class="control">
         <div class="control-left">
-            <button id="btn-prev">⏮</button>
-            <button id="btn-play" data-play="▶️" data-pause="⏸️">⏯️</button>
-            <button id="btn-next">⏭</button>
+                <button id="btn-prev">skip_previous</button>
+                <button id="btn-play" data-play="play_arrow" data-pause="pause">stop</button>
+                <button id="btn-next">skip_next</button>
         </div>
         <div id="prog-full" class="porgress">
-            <div id="prog-load"></div>
-            <div id="prog-play"></div>
+                <div id="prog-load" class="load"></div>
+                <div id="prog-play" class="play"></div>
         </div>
         <div class="timer"><span id="timer-play">0:00</span> / <span id="timer-total">0:00</span></div>
         <div class="control-right">
-            <button id="btn-loop" data-once="↩️" data-single="🔂" data-list="🔁" data-shuffle="🔀">🚫</button>
-            <button id="btn-lyric">⏏</button>
+                <button id="btn-loop" data-once="subdirectory_arrow_right" data-single="repeat_one" data-list="repeat" data-shuffle="shuffle">cancel</button>
+                <button id="btn-lyric">keyboard_capslock</button>
         </div>
         </div>
     </template>

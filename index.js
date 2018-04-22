@@ -5,8 +5,9 @@ class MelodyPlayer extends HTMLElement {
   font-family: sans-serif;
   margin: 0.5rem;
   padding: 0.5rem;
-  background-color: #dddddd;
-  border-radius: 2px;
+  color: #abb2bf;
+  background-color: #282c34;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 :host .display {
   font-size: 0.9rem;
@@ -15,18 +16,26 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .display .lyric {
   transform: translateY(63px);
+  transition: transform .5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 :host .display .lyric .lrc-line {
   margin: 1rem 0;
-  white-space: pre;
+  white-space: pre-wrap;
   text-align: center;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  transition: color .5s, text-shadow .5s;
+}
+:host .display .lyric .lrc-line.active {
+  color: white;
 }
 :host .control {
   display: flex;
   align-items: center;
 }
 :host .control button {
-  font-family: "Noto Color Emoji";
+  color: #abb2bf;
+  font-family: "Material Icons";
+  font-size: 20px;
   display: inline-block;
   width: 2rem;
   height: 2rem;
@@ -36,14 +45,15 @@ class MelodyPlayer extends HTMLElement {
   padding: 0;
   outline: none;
   cursor: pointer;
+  background-color: transparent;
   transition: background-color 0.5s;
 }
 :host .control button:hover {
   transition: background-color 0.2s;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 :host .control button:active {
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.4);
 }
 :host .control button::-moz-focus-inner {
   border: 0;
@@ -54,7 +64,7 @@ class MelodyPlayer extends HTMLElement {
   margin-left: 0.5rem;
   flex-grow: 1;
   height: 0.7rem;
-  color: teal;
+  color: #61aeee;
   background-color: rgba(0, 0, 0, 0.6);
 }
 :host .control .porgress div {
@@ -63,25 +73,26 @@ class MelodyPlayer extends HTMLElement {
   position: absolute;
   transition: width 1s linear;
 }
-:host .control .porgress #prog-load {
+:host .control .porgress .load {
   background-color: rgba(255, 255, 255, 0.3);
 }
-:host .control .porgress #prog-play {
+:host .control .porgress .play {
   background-color: currentColor;
 }
-:host .control .porgress #prog-play::after {
+:host .control .porgress .play::after {
   content: " ";
+  color: white;
   position: absolute;
   width: 2px;
   height: inherit;
   right: 0;
   top: 0;
-  border: 0 solid white;
+  border: 0 solid currentColor;
   box-shadow: 0 0 0 transparent;
-  background-color: white;
+  background-color: currentColor;
   transition: all 0.2s;
 }
-:host .control .porgress:hover #prog-play::after {
+:host .control .porgress:hover .play::after {
   cursor: pointer;
   border-width: 6px 3px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
@@ -277,15 +288,15 @@ class MelodyPlayer extends HTMLElement {
             if (nextIndex === -1) {
                 this.containerLyric.style.transform = '';
             } else {
-            this.lyrics[this.lyricIndex].classList.remove('active');
-            this.lyrics[nextIndex].classList.add('active');
-            let offset = this.lyrics[nextIndex].offsetTop
-                - this.containerDisplay.clientHeight / 2
-                + this.lyrics[nextIndex].clientHeight / 2;
-            this.containerLyric.style.transform = `translateY(calc(-1rem - ${offset}px))`;
-            this.lyricIndex = nextIndex;
+                this.lyrics[this.lyricIndex].classList.remove('active');
+                this.lyrics[nextIndex].classList.add('active');
+                let offset = this.lyrics[nextIndex].offsetTop
+                    - this.containerDisplay.clientHeight / 2
+                    + this.lyrics[nextIndex].clientHeight / 2;
+                this.containerLyric.style.transform = `translateY(calc(-1rem - ${offset}px))`;
+                this.lyricIndex = nextIndex;
+            }
         }
-    }
     }
 
     handleAudioPlaying() {
