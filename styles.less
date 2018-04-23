@@ -13,20 +13,20 @@
         overflow: hidden;
         .lyric {
             transform: translateY(0);
-            transition: transform .5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             .lrc-line {
                 margin: 16px 0;
                 white-space: pre-wrap;
                 text-align: center;
                 text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-                transition: color .5s, text-shadow .5s;
+                transition: color 0.5s, text-shadow 0.5s;
             }
             .lrc-line.active {
                 color: white;
             }
         }
         .shadow {
-            content:" ";
+            content: ' ';
             position: absolute;
             display: block;
             width: 100%;
@@ -49,19 +49,20 @@
         align-items: center;
         button {
             color: #abb2bf;
-            font-family: "Material Icons";
-            font-size: 20px;
+            font: 20px 'Material Icons';
             display: inline-block;
+            box-sizing: content-box;
             width: 32px;
             height: 32px;
-            border-radius: 50%;
-            border-style: none;
+            border-radius: 16px;
+            border: none;
             margin: 0;
             padding: 0;
             outline: none;
             cursor: pointer;
             background-color: transparent;
             transition: background-color 0.5s;
+            -webkit-tap-highlight-color: transparent;
             &:hover {
                 transition: background-color 0.2s;
                 background-color: rgba(255, 255, 255, 0.15);
@@ -89,7 +90,7 @@
                 position: absolute;
                 transition: width 1s linear;
                 &.peek {
-                    transition: width .2s;
+                    transition: width 0.2s;
                 }
             }
             .load {
@@ -98,9 +99,11 @@
             .play {
                 background-color: currentColor;
                 &::after {
-                    content: " ";
+                    content: ' ';
+                    cursor: pointer;
                     color: white;
                     position: absolute;
+                    box-sizing: content-box;
                     width: 2px;
                     height: inherit;
                     right: 0;
@@ -108,12 +111,11 @@
                     border: 0 solid currentColor;
                     box-shadow: 0 0 0 transparent;
                     background-color: currentColor;
-                    transition: all 0.2s;
+                    transition: border 0.2s, top 0.2s, right 0.2s;
                 }
             }
             &:hover {
                 .play::after {
-                    cursor: pointer;
                     border-width: 6px 3px;
                     box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
                     top: -6px;

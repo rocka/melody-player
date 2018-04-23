@@ -1,6 +1,6 @@
 class MelodyPlayer extends HTMLElement {
     static get stylesheet() {
-        return (`:host {
+        return `:host {
   display: block;
   font-family: sans-serif;
   margin: 8px;
@@ -17,14 +17,14 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .display .lyric {
   transform: translateY(0);
-  transition: transform .5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 :host .display .lyric .lrc-line {
   margin: 16px 0;
   white-space: pre-wrap;
   text-align: center;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-  transition: color .5s, text-shadow .5s;
+  transition: color 0.5s, text-shadow 0.5s;
 }
 :host .display .lyric .lrc-line.active {
   color: white;
@@ -63,19 +63,20 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .control button {
   color: #abb2bf;
-  font-family: "Material Icons";
-  font-size: 20px;
+  font: 20px "Material Icons";
   display: inline-block;
+  box-sizing: content-box;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  border-style: none;
+  border-radius: 16px;
+  border: none;
   margin: 0;
   padding: 0;
   outline: none;
   cursor: pointer;
   background-color: transparent;
   transition: background-color 0.5s;
+  -webkit-tap-highlight-color: transparent;
 }
 :host .control button:hover {
   transition: background-color 0.2s;
@@ -103,7 +104,7 @@ class MelodyPlayer extends HTMLElement {
   transition: width 1s linear;
 }
 :host .control .porgress div.peek {
-  transition: width .2s;
+  transition: width 0.2s;
 }
 :host .control .porgress .load {
   background-color: rgba(255, 255, 255, 0.3);
@@ -113,8 +114,10 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .control .porgress .play::after {
   content: " ";
+  cursor: pointer;
   color: white;
   position: absolute;
+  box-sizing: content-box;
   width: 2px;
   height: inherit;
   right: 0;
@@ -122,10 +125,9 @@ class MelodyPlayer extends HTMLElement {
   border: 0 solid currentColor;
   box-shadow: 0 0 0 transparent;
   background-color: currentColor;
-  transition: all 0.2s;
+  transition: border 0.2s, top 0.2s, right 0.2s;
 }
 :host .control .porgress:hover .play::after {
-  cursor: pointer;
   border-width: 6px 3px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
   top: -6px;
@@ -137,8 +139,7 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .control .control-right {
   margin-left: 8px;
-}`
-        );
+}`;
     }
 
     static get LoopMode() {
@@ -152,6 +153,18 @@ class MelodyPlayer extends HTMLElement {
             2: 'list',
             3: 'shuffle'
         };
+    }
+
+    static get LOG_TAG() {
+        return '[MelodyPlayer]';
+    }
+
+    static log(...args) {
+        console.log(MelodyPlayer.LOG_TAG, ...args);
+    }
+
+    static err(...args) {
+        console.error(MelodyPlayer.LOG_TAG, ...args);
     }
 
     static percent(num) {
@@ -189,10 +202,10 @@ class MelodyPlayer extends HTMLElement {
          */
         function tiggerPeek(elm, t = 0.2) {
             elm.classList.add('peek');
-            setTimeout(() =>  elm.classList.remove('peek') , t * 1000);
+            setTimeout(() => elm.classList.remove('peek'), t * 1000);
         }
-        tiggerPeek(this.progressPlay)
-        tiggerPeek(this.progressLoad)
+        tiggerPeek(this.progressPlay);
+        tiggerPeek(this.progressLoad);
         this.updateProgress();
     }
 
@@ -201,7 +214,7 @@ class MelodyPlayer extends HTMLElement {
         if (Number.isNaN(au.duration)) {
             au.addEventListener('loadedmetadata', () => {
                 this.timerTotal.textContent = MelodyPlayer.time(au.duration);
-            })
+            });
         } else {
             this.timerTotal.textContent = MelodyPlayer.time(au.duration);
         }
@@ -223,8 +236,7 @@ class MelodyPlayer extends HTMLElement {
         if (this.audios.length > 0) {
             this.playIndex = 0;
             this.updateTimerTotal();
-            this.fetchLyric()
-                .then(() => this.renderLyric());
+            this.fetchLyric().then(() => this.renderLyric());
         }
     }
 
@@ -234,22 +246,23 @@ class MelodyPlayer extends HTMLElement {
      */
     fetchLyric() {
         const au = this.audios[this.playIndex];
-        /** @type {{lrc:string; subLrc:string}} */
         const urls = {
             lrc: au.dataset['lrc'],
             subLrc: au.dataset['subLrc']
         };
         // TODO: cache lyric; retry when cache invalid
-        return Promise.all(Object.entries(urls).map(([k, v]) => {
-            if (v) {
-                return fetch(v)
-                    .then(r => r.text())
-                    .then(t => au[k] = window.LrcKit.Lrc.parse(t))
-                    .catch(e => console.error('[MelodyPlayer] Cannot fetch lrc:', e));
-            } else {
-                au[k] = '';
-            }
-        }));
+        return Promise.all(
+            Object.entries(urls).map(([k, v]) => {
+                if (v) {
+                    return fetch(v)
+                        .then(r => r.text())
+                        .then(t => (au[k] = window.LrcKit.Lrc.parse(t)))
+                        .catch(e => MelodyPlayer.err('fetch lrc', e));
+                } else {
+                    au[k] = '';
+                }
+            })
+        );
     }
 
     /**
@@ -264,13 +277,19 @@ class MelodyPlayer extends HTMLElement {
         const subLrc = au.subLrc.lyrics;
         subLrc.sort((a, b) => a.timestamp - b.timestamp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
-        let i = 0, j = 0;
+        const lyrics = [{ timestamp: 0, content: '\n' }],
+            lyricElms = [];
+        let i = 0,
+            j = 0;
         while (i < lrc.length && j < subLrc.length) {
-            const l = lrc[i], sl = subLrc[j];
+            const l = lrc[i],
+                sl = subLrc[j];
             if (l.timestamp === sl.timestamp) {
-                lyrics.push({ timestamp: l.timestamp, content: `${l.content}\n${sl.content}` });
-                i++ , j++;
+                lyrics.push({
+                    timestamp: l.timestamp,
+                    content: `${l.content}\n${sl.content}`
+                });
+                i++, j++;
             } else if (l.timestamp > sl.timestamp) {
                 lyrics.push({ timestamp: sl.timestamp, content: sl.content });
                 j++;
@@ -320,10 +339,11 @@ class MelodyPlayer extends HTMLElement {
             } else {
                 this.lyrics[this.lyricIndex].classList.remove('active');
                 this.lyrics[nextIndex].classList.add('active');
-                let offset = 16
-                    + this.lyrics[nextIndex].offsetTop
-                    - this.containerDisplay.clientHeight / 2
-                    + this.lyrics[nextIndex].clientHeight / 2;
+                let offset =
+                    16 +
+                    this.lyrics[nextIndex].offsetTop -
+                    this.containerDisplay.clientHeight / 2 +
+                    this.lyrics[nextIndex].clientHeight / 2;
                 this.containerLyric.style.transform = `translateY(-${offset}px)`;
                 this.lyricIndex = nextIndex;
             }
@@ -496,7 +516,7 @@ class MelodyPlayer extends HTMLElement {
         this.btnPrev.addEventListener('click', () => this.handleNext(-1));
         this.btnNext.addEventListener('click', () => this.handleNext(1));
         this.btnLoop.addEventListener('click', () => this.handleLoopMode());
-        this.progressFull.addEventListener('click', (ev) => this.handleProgressPeek(ev));
+        this.progressFull.addEventListener('click', ev => this.handleProgressPeek(ev));
     }
 
     constructor() {
@@ -541,8 +561,7 @@ class MelodyPlayer extends HTMLElement {
         /** @type {HTMLButtonElement} */
         this.btnLyric = null;
         setTimeout(() => {
-            this.audios = Array
-                .from(this.children)
+            this.audios = Array.from(this.children)
                 .filter(elm => elm instanceof HTMLAudioElement)
                 .map(elm => {
                     elm.addEventListener('ended', () => {
