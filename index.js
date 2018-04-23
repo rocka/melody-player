@@ -224,7 +224,6 @@ class MelodyPlayer extends HTMLElement {
     set playIndex(value) {
         if (value !== this._playIndex) {
             this._playIndex = value;
-            this._currentSecond = 0;
             const au = this.audios[value];
             if (Number.isNaN(au.duration)) {
                 au.addEventListener('loadedmetadata', () => {
@@ -248,6 +247,24 @@ class MelodyPlayer extends HTMLElement {
                 this.lyricMaskFailed,
                 this.lyricMaskNone
             ].forEach((elm, i) => MelodyPlayer.hide(elm, value !== i));
+        }
+    }
+
+    get lyricIndex() { return this._lyricIndex; }
+    set lyricIndex(value) {
+        if (value !== this._lyricIndex) {
+            this._lyricIndex = value;
+            if (value === 0) {
+                this.containerLyric.style.transform = '';
+            } else {
+                this.lyrics[this.lyricIndex].classList.remove('active');
+                this.lyrics[value].classList.add('active');
+                let offset = 16
+                    + this.lyrics[value].offsetTop
+                    - this.containerDisplay.clientHeight / 2
+                    + this.lyrics[value].clientHeight / 2;
+                this.containerLyric.style.transform = `translateY(-${offset}px)`;
+            }
         }
     }
 
@@ -412,13 +429,13 @@ class MelodyPlayer extends HTMLElement {
     }
 
     nextLyricIndex() {
-        if (this._lyricStatus !== 1) {
-            return 0;
+        if (this._lyricStatus !== 1) { // Not Loaded
+            return this.lyricIndex = 0;
         }
         const au = this.audios[this.playIndex];
-        const ly = this.lyrics[this.lyricIndex];
+        const ly = this.lyrics[this._lyricIndex];
         const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
-        let loopStart = this.lyricIndex;
+        let loopStart = this._lyricIndex;
         if (au.currentTime < lyricTime) {
             loopStart = 0;
         }
@@ -426,28 +443,10 @@ class MelodyPlayer extends HTMLElement {
             const elm = this.lyrics[i];
             const time = elm.timestamp || +elm.dataset['timestamp'];
             if (time > au.currentTime) {
-                return !i ? 0 : i - 1;
+                return this.lyricIndex = !i ? 0 : i - 1;
             }
         }
-        return this.lyrics.length - 1;
-    }
-
-    syncLyric() {
-        const nextIndex = this.nextLyricIndex();
-        if (nextIndex !== this.lyricIndex) {
-            if (nextIndex === 0) {
-                this.containerLyric.style.transform = '';
-            } else {
-                this.lyrics[this.lyricIndex].classList.remove('active');
-                this.lyrics[nextIndex].classList.add('active');
-                let offset = 16
-                    + this.lyrics[nextIndex].offsetTop
-                    - this.containerDisplay.clientHeight / 2
-                    + this.lyrics[nextIndex].clientHeight / 2;
-                this.containerLyric.style.transform = `translateY(-${offset}px)`;
-                this.lyricIndex = nextIndex;
-            }
-        }
+        return this.lyricIndex = this.lyrics.length - 1;
     }
 
     handleAudioPlaying() {
@@ -457,7 +456,7 @@ class MelodyPlayer extends HTMLElement {
             this._currentSecond = Math.floor(time);
         }
         if (this._lyricStatus === 1) { // Loaded
-            this.syncLyric();
+            this.nextLyricIndex();
         }
         if (this._playing) {
             setTimeout(() => {
@@ -470,7 +469,8 @@ class MelodyPlayer extends HTMLElement {
         const au = this.audios[this.playIndex];
         const evInit = { detail: { audio: au } };
         return au.play().then(() => {
-            this.playing = true;
+            this._playing = true;
+            this._currentSecond = Math.floor(au.currentTime);
             this.handleAudioPlaying();
             this.dispatchEvent(new CustomEvent('play', evInit));
         });
@@ -486,8 +486,7 @@ class MelodyPlayer extends HTMLElement {
         if (position === 0) {
             au.currentTime = 0;
         }
-        this.playing = false;
-        clearTimeout(this.progressTimeout);
+        this._playing = false;
         this.dispatchEvent(new CustomEvent('pause', evInit));
     }
 
@@ -507,9 +506,9 @@ class MelodyPlayer extends HTMLElement {
         const mode = this.loopMode;
         const total = this.audios.length;
         let i = this._playIndex;
-        if (force === true || [0, 2].includes(mode)) {
+        if (force === true || mode === 0 || mode === 2) { // Once || List
             i = (total + i + offset);
-        } else if (mode === 3) {
+        } else if (mode === 3) { // Shuffle
             i = Math.floor(Math.random() * total);
         }
         this.playIndex = i % total;
@@ -526,8 +525,7 @@ class MelodyPlayer extends HTMLElement {
 
     handleAudioEnd() {
         this._pause(0);
-        this.lyricIndex = 0;
-        this.containerLyric.style.transform = '';
+        this.nextLyricIndex();
         this.nextPlayIndex();
         if (this._loopMode === 0 && this._playIndex === 0) {
             this.playing = false;
@@ -551,7 +549,7 @@ class MelodyPlayer extends HTMLElement {
         const progress = (ev.clientX - start) / this.progressFull.offsetWidth;
         au.currentTime = progress * au.duration;
         this.syncProgress();
-        this.syncLyric();
+        this.nextLyricIndex();
         this._currentSecond = Math.floor(au.currentTime);
     }
 
@@ -608,11 +606,9 @@ class MelodyPlayer extends HTMLElement {
         this._lyricStatus = null;
         /** @type {HTMLParagraphElement[]} */
         this.lyrics = null;
-        this.lyricIndex = 0;
+        this._lyricIndex = 0;
         /** @type {number} */
         this._loopMode = null;
-        /** @type {number} */
-        this.progressTimeout = null;
         /** @type {HTMLDivElement} */
         this.containerDisplay = null;
         /** @type {HTMLDivElement} */
