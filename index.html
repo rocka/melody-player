@@ -27,6 +27,9 @@
 <body>
     <template id="mldy-tmpl">
         <div id="container-disp" class="display">
+            <div id="lyric-mask-loading" class="lyric mask"><p class="line">歌词加载中<br>Loading Lyric<br>歌詞を読み込む</p></div>
+            <div id="lyric-mask-failed" class="lyric mask"><p class="line">歌词加载失败<br>Failed to Load Lyric<br>歌詞を読み込めません</p></div>
+            <div id="lyric-mask-none" class="lyric mask"><p class="line">暂无歌词<br>No Lyric<br>歌詞なし</p></div>
             <div id="container-lrc" class="lyric"></div>
         </div>
         <div class="control">
@@ -52,16 +55,19 @@
         <h2>Static HTML Template</h2>
         <div class="melody-player">
             <div class="display">
+                <div class="lyric mask" style="display:none;"><p class="line">歌词加载中<br>Loading Lyric<br>歌詞を読み込む</p></div>
+                <div class="lyric mask" style="display:none;"><p class="line">歌词加载失败<br>Failed to Load Lyric<br>歌詞を読み込めません</p></div>
+                <div class="lyric mask" style="display:none;"><p class="line">暂无歌词<br>No Lyric<br>歌詞なし</p></div>
                 <div class="lyric" style="transform:translateY(-53.5px);">
-                    <p class="lrc-line"><br></p>
-                    <p class="lrc-line">半径85センチが　この手の届く距離<br>半径85公分是这只手能到达的距离</p>
-                    <p class="lrc-line active">今から振り回しますので　離れていてください<br>现在要开始挥了　请快点远离</p>
-                    <p class="lrc-line"></p>
-                    <p class="lrc-line">ダブルラリアット<br>double lariat</p>
-                    <p class="lrc-line">唄：巡音ルカ<br>演唱：ruka酱</p>
-                    <p class="lrc-line"></p>
-                    <p class="lrc-line"></p>
-                    <p class="lrc-line">ただ回る事が楽しかった　このままでいたかった<br>只是觉得一直转动很快乐　想要保持这样</p>
+                    <p class="line"><br></p>
+                    <p class="line">半径85センチが　この手の届く距離<br>半径85公分是这只手能到达的距离</p>
+                    <p class="line active">今から振り回しますので　離れていてください<br>现在要开始挥了　请快点远离</p>
+                    <p class="line"></p>
+                    <p class="line">ダブルラリアット<br>double lariat</p>
+                    <p class="line">唄：巡音ルカ<br>演唱：ruka酱</p>
+                    <p class="line"></p>
+                    <p class="line"></p>
+                    <p class="line">ただ回る事が楽しかった　このままでいたかった<br>只是觉得一直转动很快乐　想要保持这样</p>
                 </div>
             </div>
             <div class="control">
