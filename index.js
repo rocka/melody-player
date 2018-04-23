@@ -19,15 +19,19 @@ class MelodyPlayer extends HTMLElement {
   transform: translateY(0);
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-:host .display .lyric .lrc-line {
+:host .display .lyric .line {
   margin: 16px 0;
   white-space: pre-wrap;
   text-align: center;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
   transition: color 0.5s, text-shadow 0.5s;
 }
-:host .display .lyric .lrc-line.active {
+:host .display .lyric .line.active {
   color: white;
+}
+:host .display .lyric.mask {
+  position: relative;
+  top: calc(50% - 3em);
 }
 :host .display .shadow {
   content: " ";
@@ -155,16 +159,29 @@ class MelodyPlayer extends HTMLElement {
         };
     }
 
-    static get LOG_TAG() {
+    static get LyricStatus() {
+        return {
+            Loading: 0,
+            Loaded: 1,
+            Failed: 2,
+            None: 3,
+            0: 'loading',
+            1: 'loaded',
+            2: 'failed',
+            3: 'none'
+        }
+    }
+
+    static get LogTag() {
         return '[MelodyPlayer]';
     }
 
     static log(...args) {
-        console.log(MelodyPlayer.LOG_TAG, ...args);
+        console.log(MelodyPlayer.LogTag, ...args);
     }
 
     static err(...args) {
-        console.error(MelodyPlayer.LOG_TAG, ...args);
+        console.error(MelodyPlayer.LogTag, ...args);
     }
 
     static percent(num) {
@@ -184,6 +201,15 @@ class MelodyPlayer extends HTMLElement {
         return [mm, ss > 9 ? ss : `0${ss}`].join(':');
     }
 
+    /**
+     * hide HTML element; set style.display to none
+     * @param {HTMLElement} elm
+     * @param {boolean} hide hide or unhide
+     */
+    static hide(elm, hide = true) {
+        elm.style.display = hide ? 'none' : '';
+    }
+
     get playing() { return this._playing; }
     set playing(value) {
         if (value !== this._playing) {
@@ -198,6 +224,7 @@ class MelodyPlayer extends HTMLElement {
     set playIndex(value) {
         if (value !== this._playIndex) {
             this._playIndex = value;
+            this._currentSecond = 0;
             const au = this.audios[value];
             if (Number.isNaN(au.duration)) {
                 au.addEventListener('loadedmetadata', () => {
@@ -207,6 +234,20 @@ class MelodyPlayer extends HTMLElement {
                 this.timerTotal.textContent = MelodyPlayer.time(au.duration);
             }
             this.syncProgress();
+            this.fetchLyric().then(() => this.renderLyric());
+        }
+    }
+
+    get lyricStatus() { return this._lyricStatus; }
+    set lyricStatus(value) {
+        if (value !== this._lyricStatus) {
+            this._lyricStatus = value;
+            [
+                this.lyricMaskLoading,
+                this.containerLyric,
+                this.lyricMaskFailed,
+                this.lyricMaskNone
+            ].forEach((elm, i) => MelodyPlayer.hide(elm, value !== i));
         }
     }
 
@@ -243,7 +284,6 @@ class MelodyPlayer extends HTMLElement {
         this.loopMode = MelodyPlayer.LoopMode.Once;
         if (this.audios.length > 0) {
             this.playIndex = 0;
-            this.fetchLyric().then(() => this.renderLyric());
         }
     }
 
@@ -284,21 +324,38 @@ class MelodyPlayer extends HTMLElement {
      * @returns {Promise<void>}
      */
     fetchLyric() {
+        this.lyricStatus = 0; // Loading
         const au = this.audios[this.playIndex];
         const urls = {
             lrc: au.dataset['lrc'],
             subLrc: au.dataset['subLrc']
         };
         // TODO: cache lyric; retry when cache invalid
+        // maybe the browser would do it?
         return Promise.all(
             Object.entries(urls).map(([k, v]) => {
                 if (v) {
                     return fetch(v)
-                        .then(r => r.text())
-                        .then(t => (au[k] = window.LrcKit.Lrc.parse(t)))
-                        .catch(e => MelodyPlayer.err('fetch lrc', e));
+                        .then(r => {
+                            if (r.status === 200) {
+                                return r.text();
+                            }
+                            throw r;
+                        })
+                        .then(t => {
+                            try {
+                                au[k] = { status: 1, ...window.LrcKit.Lrc.parse(t) };
+                            } catch (e) {
+                                MelodyPlayer.err('parse lrc', e);
+                                au[k] = { status: 2, lyrics: [] }; // Failed
+                            }
+                        })
+                        .catch(e => {
+                            MelodyPlayer.err('fetch lyric', e);
+                            au[k] = { status: 2, lyrics: [] }; // Failed
+                        });
                 } else {
-                    au[k] = '';
+                    au[k] = { status: 3, lyrics: [] }; // None
                 }
             })
         );
@@ -309,24 +366,32 @@ class MelodyPlayer extends HTMLElement {
      */
     renderLyric() {
         const au = this.audios[this.playIndex];
+        if (au.lrc.status === 3 && au.subLrc.status === 3) { // None
+            this.lyricStatus = 3;
+            return;
+        }
+        if (au.lrc.status !== 1 && au.subLrc.status !== 1) { // Failed
+            this.lyricStatus = 2;
+            return;
+        }
+        this.lyricStatus = 1; // Loaded
+        const cmp = (a, b) => a.timestamp - b.timestamp;
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lrc = au.lrc.lyrics;
-        lrc.sort((a, b) => a.timestamp - b.timestamp);
+        const lrc = au.lrc.lyrics.sort(cmp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const subLrc = au.subLrc.lyrics;
-        subLrc.sort((a, b) => a.timestamp - b.timestamp);
+        const subLrc = au.subLrc.lyrics.sort(cmp);
         /** @type {Array.<{timestamp:number;content:string}>} */
         const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
         let i = 0, j = 0;
-        while (i < lrc.length && j < subLrc.length) {
+        while (i < lrc.length || j < subLrc.length) {
             const l = lrc[i], sl = subLrc[j];
-            if (l.timestamp === sl.timestamp) {
+            if (l && sl && l.timestamp === sl.timestamp) {
                 lyrics.push({ timestamp: l.timestamp, content: `${l.content}\n${sl.content}` });
                 i++ , j++;
-            } else if (l.timestamp > sl.timestamp) {
+            } else if (!l && sl || l && sl && l.timestamp > sl.timestamp) {
                 lyrics.push({ timestamp: sl.timestamp, content: sl.content });
                 j++;
-            } else if (sl.timestamp > l.timestamp) {
+            } else if (!sl && l || l && sl && sl.timestamp > l.timestamp) {
                 lyrics.push({ timestamp: l.timestamp, content: l.content });
                 i++;
             }
@@ -334,7 +399,7 @@ class MelodyPlayer extends HTMLElement {
         const frag = document.createDocumentFragment();
         for (const line of lyrics) {
             const elm = document.createElement('p');
-            elm.classList.add('lrc-line');
+            elm.classList.add('line');
             elm.timestamp = line.timestamp;
             elm.dataset['timestamp'] = line.timestamp;
             elm.appendChild(document.createTextNode(line.content));
@@ -347,6 +412,9 @@ class MelodyPlayer extends HTMLElement {
     }
 
     nextLyricIndex() {
+        if (this._lyricStatus !== 1) {
+            return 0;
+        }
         const au = this.audios[this.playIndex];
         const ly = this.lyrics[this.lyricIndex];
         const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
@@ -383,26 +451,24 @@ class MelodyPlayer extends HTMLElement {
     }
 
     handleAudioPlaying() {
-        this.updateProgress();
-        this.syncLyric();
-        this.progressTimeout = setTimeout(() => {
-            if (this.playing) {
-                this.handleAudioPlaying();
-            }
-        }, 1000);
+        const time = this.audios[this.playIndex].currentTime;
+        if (time - this._currentSecond > 1) {
+            this.updateProgress();
+            this._currentSecond = Math.floor(time);
+        }
+        if (this._lyricStatus === 1) { // Loaded
+            this.syncLyric();
+        }
+        if (this._playing) {
+            setTimeout(() => {
+                window.requestAnimationFrame(() => this.handleAudioPlaying());
+            }, 166);
+        }
     }
 
     _play() {
         const au = this.audios[this.playIndex];
         const evInit = { detail: { audio: au } };
-        if (au.currentTime < 1e-9) {
-            if (this.firstPlay) {
-                this.firstPlay = false;
-            } else {
-                // TODO: loading indicator for lyric
-                this.fetchLyric().then(() => this.renderLyric());
-            }
-        }
         return au.play().then(() => {
             this.playing = true;
             this.handleAudioPlaying();
@@ -453,7 +519,6 @@ class MelodyPlayer extends HTMLElement {
      * @param {number} offset next offset
      */
     handleNext(offset = 1) {
-        if (this.firstPlay) { this.firstPlay = false; }
         this._pause(0);
         this.nextPlayIndex(offset, this._loopMode === 1);
         this._play();
@@ -466,8 +531,6 @@ class MelodyPlayer extends HTMLElement {
         this.nextPlayIndex();
         if (this._loopMode === 0 && this._playIndex === 0) {
             this.playing = false;
-            this.renderLyric();
-            this.firstPlay = true;
             this.dispatchEvent(new CustomEvent('playend'));
         } else {
             this._play();
@@ -489,6 +552,7 @@ class MelodyPlayer extends HTMLElement {
         au.currentTime = progress * au.duration;
         this.syncProgress();
         this.syncLyric();
+        this._currentSecond = Math.floor(au.currentTime);
     }
 
     render() {
@@ -509,6 +573,9 @@ class MelodyPlayer extends HTMLElement {
         shadow.appendChild(dom);
         // DOM element reference
         this.containerDisplay = shadow.getElementById('container-disp');
+        this.lyricMaskLoading = shadow.getElementById('lyric-mask-loading');
+        this.lyricMaskFailed = shadow.getElementById('lyric-mask-failed');
+        this.lyricMaskNone = shadow.getElementById('lyric-mask-none');
         this.containerLyric = shadow.getElementById('container-lrc');
         this.progressFull = shadow.getElementById('prog-full');
         this.progressPlay = shadow.getElementById('prog-play');
@@ -530,13 +597,15 @@ class MelodyPlayer extends HTMLElement {
 
     constructor() {
         super();
-        this.firstPlay = true;
+        this._currentSecond = 0;
         /** @type {boolean} */
         this._playing = null;
         /** @type {HTMLAudioElement[]} */
         this.audios = [];
         /** @type {number} */
         this._playIndex = null;
+        /** @type {boolean} */
+        this._lyricStatus = null;
         /** @type {HTMLParagraphElement[]} */
         this.lyrics = null;
         this.lyricIndex = 0;
@@ -545,9 +614,13 @@ class MelodyPlayer extends HTMLElement {
         /** @type {number} */
         this.progressTimeout = null;
         /** @type {HTMLDivElement} */
-        this.containerLyric = null;
-        /** @type {HTMLDivElement} */
         this.containerDisplay = null;
+        /** @type {HTMLDivElement} */
+        this.lyricMaskLoading = null;
+        /** @type {HTMLDivElement} */
+        this.lyricMaskFailed = null;
+        /** @type {HTMLDivElement} */
+        this.lyricMaskNone = null;
         /** @type {HTMLDivElement} */
         this.containerLyric = null;
         /** @type {HTMLDivElement} */
