@@ -184,6 +184,69 @@ class MelodyPlayer extends HTMLElement {
         return [mm, ss > 9 ? ss : `0${ss}`].join(':');
     }
 
+    get playing() { return this._playing; }
+    set playing(value) {
+        if (value !== this._playing) {
+            this._playing = value;
+            const elm = this.btnPlay;
+            elm.textContent = elm.dataset[value ? 'pause' : 'play'];
+            try { this.syncProgress(); } catch (e) { /* just ignore */ }
+        }
+    }
+
+    get playIndex() { return this._playIndex; }
+    set playIndex(value) {
+        if (value !== this._playIndex) {
+            this._playIndex = value;
+            const au = this.audios[value];
+            if (Number.isNaN(au.duration)) {
+                au.addEventListener('loadedmetadata', () => {
+                    this.timerTotal.textContent = MelodyPlayer.time(au.duration);
+                });
+            } else {
+                this.timerTotal.textContent = MelodyPlayer.time(au.duration);
+            }
+            this.syncProgress();
+        }
+    }
+
+    get loopMode() { return this._loopMode; }
+    set loopMode(value) {
+        if (value !== this._loopMode) {
+            this._loopMode = value;
+            const elm = this.btnLoop;
+            elm.textContent = elm.dataset[MelodyPlayer.LoopMode[value]];
+        }
+    }
+
+    /**
+     * add audio to `this.audios` and add event listeners
+     * @param {HTMLAudioElement} audio
+     */
+    registerAudio(audio) {
+        this.audios.push(audio);
+        audio.addEventListener('play', () => {
+            this.playing = true;
+        });
+        audio.addEventListener('pause', () => {
+            this.playing = false;
+        });
+        audio.addEventListener('ended', () => {
+            this.handleAudioEnd();
+            const evInit = { detail: { audio } };
+            this.dispatchEvent(new CustomEvent('audioend', evInit));
+        });
+    }
+
+    init() {
+        this.playing = false;
+        this.loopMode = MelodyPlayer.LoopMode.Once;
+        if (this.audios.length > 0) {
+            this.playIndex = 0;
+            this.fetchLyric().then(() => this.renderLyric());
+        }
+    }
+
     updateProgress() {
         const au = this.audios[this.playIndex];
         this.timerPlay.textContent = MelodyPlayer.time(au.currentTime);
@@ -197,9 +260,7 @@ class MelodyPlayer extends HTMLElement {
     }
 
     syncProgress() {
-        /**
-         * @param {HTMLDivElement} elm
-         */
+        /** @param {HTMLDivElement} elm */
         function tiggerPeek(elm, t = 0.2) {
             elm.classList.add('peek');
             setTimeout(() => elm.classList.remove('peek'), t * 1000);
@@ -209,35 +270,13 @@ class MelodyPlayer extends HTMLElement {
         this.updateProgress();
     }
 
-    updateTimerTotal() {
-        const au = this.audios[this.playIndex];
-        if (Number.isNaN(au.duration)) {
-            au.addEventListener('loadedmetadata', () => {
-                this.timerTotal.textContent = MelodyPlayer.time(au.duration);
-            });
-        } else {
-            this.timerTotal.textContent = MelodyPlayer.time(au.duration);
-        }
-    }
-
-    updateBtnPlay() {
-        const elm = this.btnPlay;
-        elm.textContent = elm.dataset[this.playing ? 'pause' : 'play'];
-    }
-
-    updateBtnLoop() {
-        const elm = this.btnLoop;
-        elm.textContent = elm.dataset[MelodyPlayer.LoopMode[this.loopMode]];
-    }
-
-    handlePlayerReady() {
-        this.updateBtnPlay();
-        this.updateBtnLoop();
-        if (this.audios.length > 0) {
-            this.playIndex = 0;
-            this.updateTimerTotal();
-            this.fetchLyric().then(() => this.renderLyric());
-        }
+    /**
+     * remove all rendered lyric elements
+     */
+    clearLyric() {
+        const p = this.containerLyric;
+        let c = p.firstChild;
+        while (c) { p.removeChild(c), c = p.firstChild; }
     }
 
     /**
@@ -277,19 +316,13 @@ class MelodyPlayer extends HTMLElement {
         const subLrc = au.subLrc.lyrics;
         subLrc.sort((a, b) => a.timestamp - b.timestamp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [{ timestamp: 0, content: '\n' }],
-            lyricElms = [];
-        let i = 0,
-            j = 0;
+        const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
+        let i = 0, j = 0;
         while (i < lrc.length && j < subLrc.length) {
-            const l = lrc[i],
-                sl = subLrc[j];
+            const l = lrc[i], sl = subLrc[j];
             if (l.timestamp === sl.timestamp) {
-                lyrics.push({
-                    timestamp: l.timestamp,
-                    content: `${l.content}\n${sl.content}`
-                });
-                i++, j++;
+                lyrics.push({ timestamp: l.timestamp, content: `${l.content}\n${sl.content}` });
+                i++ , j++;
             } else if (l.timestamp > sl.timestamp) {
                 lyrics.push({ timestamp: sl.timestamp, content: sl.content });
                 j++;
@@ -309,7 +342,7 @@ class MelodyPlayer extends HTMLElement {
             lyricElms.push(elm);
         }
         this.lyrics = lyricElms;
-        this.containerLyric.innerHTML = '';
+        this.clearLyric();
         this.containerLyric.appendChild(frag);
     }
 
@@ -339,11 +372,10 @@ class MelodyPlayer extends HTMLElement {
             } else {
                 this.lyrics[this.lyricIndex].classList.remove('active');
                 this.lyrics[nextIndex].classList.add('active');
-                let offset =
-                    16 +
-                    this.lyrics[nextIndex].offsetTop -
-                    this.containerDisplay.clientHeight / 2 +
-                    this.lyrics[nextIndex].clientHeight / 2;
+                let offset = 16
+                    + this.lyrics[nextIndex].offsetTop
+                    - this.containerDisplay.clientHeight / 2
+                    + this.lyrics[nextIndex].clientHeight / 2;
                 this.containerLyric.style.transform = `translateY(-${offset}px)`;
                 this.lyricIndex = nextIndex;
             }
@@ -363,20 +395,17 @@ class MelodyPlayer extends HTMLElement {
     _play() {
         const au = this.audios[this.playIndex];
         const evInit = { detail: { audio: au } };
-        if (this.audios[this.playIndex].currentTime < 1e-9) {
+        if (au.currentTime < 1e-9) {
             if (this.firstPlay) {
                 this.firstPlay = false;
             } else {
                 // TODO: loading indicator for lyric
                 this.fetchLyric().then(() => this.renderLyric());
             }
-            this.updateTimerTotal();
-            this.syncProgress();
         }
         return au.play().then(() => {
             this.playing = true;
             this.handleAudioPlaying();
-            this.updateBtnPlay();
             this.dispatchEvent(new CustomEvent('play', evInit));
         });
     }
@@ -393,7 +422,6 @@ class MelodyPlayer extends HTMLElement {
         }
         this.playing = false;
         clearTimeout(this.progressTimeout);
-        this.updateBtnPlay();
         this.dispatchEvent(new CustomEvent('pause', evInit));
     }
 
@@ -406,36 +434,28 @@ class MelodyPlayer extends HTMLElement {
     }
 
     /**
-     * @param {number} pos should be next, or prev
-     * @returns {boolean} should continue playing
+     * @param {number} offset next offset
+     * @param {boolean} force force switch to next track
      */
-    nextPlayIndex(pos = 1) {
-        switch (this.loopMode) {
-            case MelodyPlayer.LoopMode.Once:
-                this.playIndex = (this.audios.length + this.playIndex + pos) % this.audios.length;
-                if (this.playIndex === 0) return false;
-                break;
-            case MelodyPlayer.LoopMode.Single:
-                break;
-            case MelodyPlayer.LoopMode.List:
-                this.playIndex = (this.audios.length + this.playIndex + pos) % this.audios.length;
-                break;
-            case MelodyPlayer.LoopMode.Shuffle:
-                this.playIndex = Math.round(Math.random() * Number.MAX_SAFE_INTEGER) % this.audios.length;
-                break;
+    nextPlayIndex(offset = 1, force = false) {
+        const mode = this.loopMode;
+        const total = this.audios.length;
+        let i = this._playIndex;
+        if (force === true || [0, 2].includes(mode)) {
+            i = (total + i + offset);
+        } else if (mode === 3) {
+            i = Math.floor(Math.random() * total);
         }
-        return true;
+        this.playIndex = i % total;
     }
 
     /**
-     * @param {number} pos should be next, or prev
+     * @param {number} offset next offset
      */
-    handleNext(pos = 1) {
-        if (this.firstPlay) {
-            this.firstPlay = false;
-        }
+    handleNext(offset = 1) {
+        if (this.firstPlay) { this.firstPlay = false; }
         this._pause(0);
-        this.nextPlayIndex(pos);
+        this.nextPlayIndex(offset, this._loopMode === 1);
         this._play();
     }
 
@@ -443,26 +463,19 @@ class MelodyPlayer extends HTMLElement {
         this._pause(0);
         this.lyricIndex = 0;
         this.containerLyric.style.transform = '';
-        const shouldContinue = this.nextPlayIndex();
-        if (shouldContinue) {
-            this._play();
-        } else {
+        this.nextPlayIndex();
+        if (this._loopMode === 0 && this._playIndex === 0) {
             this.playing = false;
-            this.updateBtnPlay();
+            this.renderLyric();
+            this.firstPlay = true;
             this.dispatchEvent(new CustomEvent('playend'));
+        } else {
+            this._play();
         }
-        this.updateTimerTotal();
-        this.syncProgress();
-    }
-
-    handlePlayEnd() {
-        this.renderLyric();
-        this.firstPlay = true;
     }
 
     handleLoopMode() {
         this.loopMode = (this.loopMode + 1) % 4;
-        this.updateBtnLoop();
     }
 
     /**
@@ -494,6 +507,7 @@ class MelodyPlayer extends HTMLElement {
         }
         shadow.appendChild(style);
         shadow.appendChild(dom);
+        // DOM element reference
         this.containerDisplay = shadow.getElementById('container-disp');
         this.containerLyric = shadow.getElementById('container-lrc');
         this.progressFull = shadow.getElementById('prog-full');
@@ -506,12 +520,7 @@ class MelodyPlayer extends HTMLElement {
         this.btnNext = shadow.getElementById('btn-next');
         this.btnLyric = shadow.getElementById('btn-lyric');
         this.btnLoop = shadow.getElementById('btn-loop');
-    }
-
-    event() {
-        this.addEventListener('ready', () => this.handlePlayerReady());
-        this.addEventListener('audioend', () => this.handleAudioEnd());
-        this.addEventListener('playend', () => this.handlePlayEnd());
+        // register DOM interactive events
         this.btnPlay.addEventListener('click', () => this.handlePlayOrPause());
         this.btnPrev.addEventListener('click', () => this.handleNext(-1));
         this.btnNext.addEventListener('click', () => this.handleNext(1));
@@ -522,18 +531,19 @@ class MelodyPlayer extends HTMLElement {
     constructor() {
         super();
         this.firstPlay = true;
-        this.playing = false;
+        /** @type {boolean} */
+        this._playing = null;
         /** @type {HTMLAudioElement[]} */
         this.audios = [];
-        this.playIndex = 0;
+        /** @type {number} */
+        this._playIndex = null;
         /** @type {HTMLParagraphElement[]} */
         this.lyrics = null;
         this.lyricIndex = 0;
-        this.loopMode = MelodyPlayer.LoopMode.Once;
+        /** @type {number} */
+        this._loopMode = null;
         /** @type {number} */
         this.progressTimeout = null;
-        /** @type {Function} */
-        this.audioEndListener = null;
         /** @type {HTMLDivElement} */
         this.containerLyric = null;
         /** @type {HTMLDivElement} */
@@ -561,23 +571,18 @@ class MelodyPlayer extends HTMLElement {
         /** @type {HTMLButtonElement} */
         this.btnLyric = null;
         setTimeout(() => {
-            this.audios = Array.from(this.children)
+            Array.from(this.children)
                 .filter(elm => elm instanceof HTMLAudioElement)
-                .map(elm => {
-                    elm.addEventListener('ended', () => {
-                        this.dispatchEvent(new CustomEvent('audioend'));
-                    });
-                    return elm;
-                });
+                .map(elm => this.registerAudio(elm));
+            this.init();
             const evInit = { detail: { audios: this.audios } };
             this.dispatchEvent(new CustomEvent('ready', evInit));
         }, 0);
         this.render();
-        this.event();
     }
 
     connectedCallback() {
-        console.log('MelodyPlayer loaded.');
+        MelodyPlayer.log('connected.');
     }
 }
 
