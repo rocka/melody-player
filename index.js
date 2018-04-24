@@ -20,14 +20,16 @@ class MelodyPlayer extends HTMLElement {
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 :host .display .lyric .line {
+  opacity: 0.4;
   margin: 16px 0;
   white-space: pre-wrap;
   text-align: center;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-  transition: color 0.5s, text-shadow 0.5s;
+  transition: color 0.5s, opacity 0.5s;
 }
 :host .display .lyric .line.active {
   color: white;
+  opacity: 1;
+  text-shadow: 0 0 0.3px currentColor;
 }
 :host .display .lyric.mask {
   position: relative;
