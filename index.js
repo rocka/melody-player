@@ -253,18 +253,18 @@ class MelodyPlayer extends HTMLElement {
     get lyricIndex() { return this._lyricIndex; }
     set lyricIndex(value) {
         if (value !== this._lyricIndex) {
+            window.requestAnimationFrame(((before, current) => {
+                const bf = this.lyrics[before];
+                if (bf) { bf.classList.remove('active'); }
+                const cur = this.lyrics[current];
+                cur.classList.add('active');
+                let offset = this.containerDisplay.clientHeight / 2
+                    - cur.clientHeight / 2
+                    - cur.offsetTop
+                    - 16;
+                this.containerLyric.style.transform = `translateY(${offset}px)`;
+            }).bind(this, this._lyricIndex, value));
             this._lyricIndex = value;
-            if (value === 0) {
-                this.containerLyric.style.transform = '';
-            } else {
-                this.lyrics[this.lyricIndex].classList.remove('active');
-                this.lyrics[value].classList.add('active');
-                let offset = 16
-                    + this.lyrics[value].offsetTop
-                    - this.containerDisplay.clientHeight / 2
-                    + this.lyrics[value].clientHeight / 2;
-                this.containerLyric.style.transform = `translateY(-${offset}px)`;
-            }
         }
     }
 
@@ -398,7 +398,7 @@ class MelodyPlayer extends HTMLElement {
         /** @type {Array.<{timestamp:number;content:string}>} */
         const subLrc = au.subLrc.lyrics.sort(cmp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
+        const lyrics = [{ timestamp: 0, content: '' }], lyricElms = [];
         let i = 0, j = 0;
         while (i < lrc.length || j < subLrc.length) {
             const l = lrc[i], sl = subLrc[j];
@@ -426,6 +426,7 @@ class MelodyPlayer extends HTMLElement {
         this.lyrics = lyricElms;
         this.clearLyric();
         this.containerLyric.appendChild(frag);
+        this.nextLyricIndex();
     }
 
     nextLyricIndex() {
@@ -433,11 +434,15 @@ class MelodyPlayer extends HTMLElement {
             return this.lyricIndex = 0;
         }
         const au = this.audios[this.playIndex];
-        const ly = this.lyrics[this._lyricIndex];
-        const lyricTime = ly.timestamp || +ly.dataset['timestamp'];
-        let loopStart = this._lyricIndex;
-        if (au.currentTime < lyricTime) {
-            loopStart = 0;
+        let loopStart = this._lyricIndex || 0;
+        // decide where to start loop
+        const activeLyric = this.lyrics[this._lyricIndex];
+        if (activeLyric) {
+            const activeTime = activeLyric.timestamp || +activeLyric.dataset['timestamp'];
+            if (au.currentTime < activeTime) {
+                // audio seek back, loop lyric from 0
+                loopStart = 0;
+        }
         }
         for (let i = loopStart; i < this.lyrics.length; i++) {
             const elm = this.lyrics[i];
@@ -459,9 +464,7 @@ class MelodyPlayer extends HTMLElement {
             this.nextLyricIndex();
         }
         if (this._playing) {
-            setTimeout(() => {
-                window.requestAnimationFrame(() => this.handleAudioPlaying());
-            }, 166);
+            setTimeout(() => this.handleAudioPlaying(), 166);
         }
     }
 
@@ -469,7 +472,7 @@ class MelodyPlayer extends HTMLElement {
         const au = this.audios[this.playIndex];
         const evInit = { detail: { audio: au } };
         return au.play().then(() => {
-            this._playing = true;
+            this.playing = true;
             this._currentSecond = Math.floor(au.currentTime);
             this.handleAudioPlaying();
             this.dispatchEvent(new CustomEvent('play', evInit));
@@ -486,12 +489,12 @@ class MelodyPlayer extends HTMLElement {
         if (position === 0) {
             au.currentTime = 0;
         }
-        this._playing = false;
+        this.playing = false;
         this.dispatchEvent(new CustomEvent('pause', evInit));
     }
 
     handlePlayOrPause() {
-        if (this.playing) {
+        if (this._playing) {
             this._pause();
         } else {
             this._play();
@@ -606,7 +609,8 @@ class MelodyPlayer extends HTMLElement {
         this._lyricStatus = null;
         /** @type {HTMLParagraphElement[]} */
         this.lyrics = null;
-        this._lyricIndex = 0;
+        /** @type {number} */
+        this._lyricIndex = null;
         /** @type {number} */
         this._loopMode = null;
         /** @type {HTMLDivElement} */
