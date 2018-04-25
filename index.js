@@ -322,15 +322,18 @@ main[single] .control-left button:last-child {
      */
     registerAudio(audio) {
         this.audios.push(audio);
+        const evInit = { detail: { audio } };
         audio.addEventListener('play', () => {
             this.playing = true;
+            this.handleAudioPlaying();
+            this.dispatchEvent(new CustomEvent('play', evInit));
         });
         audio.addEventListener('pause', () => {
             this.playing = false;
+            this.dispatchEvent(new CustomEvent('pause', evInit));
         });
         audio.addEventListener('ended', () => {
             this.handleAudioEnd();
-            const evInit = { detail: { audio } };
             this.dispatchEvent(new CustomEvent('audioend', evInit));
         });
     }
@@ -517,13 +520,7 @@ main[single] .control-left button:last-child {
 
     _play() {
         const au = this.audios[this.playIndex];
-        const evInit = { detail: { audio: au } };
-        return au.play().then(() => {
-            this.playing = true;
-            this._currentSecond = Math.floor(au.currentTime);
-            this.handleAudioPlaying();
-            this.dispatchEvent(new CustomEvent('play', evInit));
-        });
+        return au.play();
     }
 
     /**
@@ -531,13 +528,10 @@ main[single] .control-left button:last-child {
      */
     _pause(position = true) {
         const au = this.audios[this.playIndex];
-        const evInit = { detail: { audio: au } };
         au.pause();
         if (position === 0) {
             au.currentTime = 0;
         }
-        this.playing = false;
-        this.dispatchEvent(new CustomEvent('pause', evInit));
     }
 
     handlePlayOrPause() {
