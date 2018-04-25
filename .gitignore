@@ -1,0 +1,9 @@
+.vscode
+.idea
+
+vendor
+*.css
+font/*
+!font/*.md
+!font/*.py
+!font/icon-names.txt

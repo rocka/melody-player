@@ -1,0 +1,10 @@
+skip_previous
+skip_next
+play_arrow
+pause
+stop
+subdirectory_arrow_right
+repeat_one
+repeat
+shuffle
+keyboard_capslock
