@@ -15,8 +15,9 @@
     .display {
         position: relative;
         font-size: 14px;
-        height: 150px;
+        height: 0;
         overflow: hidden;
+        transition: height 0.5s;
         .lyric {
             transform: translateY(0);
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -36,6 +37,9 @@
                 position: relative;
                 top: calc(50% - 3em);
             }
+        }
+        &.active {
+            height: 150px;
         }
         .shadow {
             content: ' ';
@@ -73,14 +77,17 @@
             outline: none;
             cursor: pointer;
             background-color: transparent;
-            transition: background-color 0.5s;
+            transition: background-color 0.5s, transform 0.5s;
             -webkit-tap-highlight-color: transparent;
             &:hover {
-                transition: background-color 0.2s;
+                transition: background-color 0.2s, transform 0.5s;
                 background-color: rgba(255, 255, 255, 0.15);
             }
             &:active {
                 background-color: rgba(255, 255, 255, 0.4);
+            }
+            &.flip {
+                transform: rotate(180deg);
             }
             &::-moz-focus-inner {
                 border: 0;

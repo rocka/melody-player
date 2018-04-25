@@ -12,8 +12,9 @@ class MelodyPlayer extends HTMLElement {
 :host .display {
   position: relative;
   font-size: 14px;
-  height: 150px;
+  height: 0;
   overflow: hidden;
+  transition: height 0.5s;
 }
 :host .display .lyric {
   transform: translateY(0);
@@ -33,10 +34,13 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .display .lyric.mask {
   position: relative;
-  top: calc(50% - 3em);
+  top: calc(47%);
+}
+:host .display.active {
+  height: 150px;
 }
 :host .display .shadow {
-  content: " ";
+  content: ' ';
   position: absolute;
   display: block;
   width: 100%;
@@ -44,7 +48,7 @@ class MelodyPlayer extends HTMLElement {
   z-index: 1;
 }
 :host .display::before {
-  content: " ";
+  content: ' ';
   position: absolute;
   display: block;
   width: 100%;
@@ -54,7 +58,7 @@ class MelodyPlayer extends HTMLElement {
   background-image: linear-gradient(#282c34, transparent);
 }
 :host .display::after {
-  content: " ";
+  content: ' ';
   position: absolute;
   display: block;
   width: 100%;
@@ -69,7 +73,7 @@ class MelodyPlayer extends HTMLElement {
 }
 :host .control button {
   color: #abb2bf;
-  font: 20px "MelodyPlayerIcons";
+  font: 20px 'MelodyPlayerIcons';
   display: inline-block;
   box-sizing: content-box;
   width: 32px;
@@ -81,15 +85,18 @@ class MelodyPlayer extends HTMLElement {
   outline: none;
   cursor: pointer;
   background-color: transparent;
-  transition: background-color 0.5s;
+  transition: background-color 0.5s, transform 0.5s;
   -webkit-tap-highlight-color: transparent;
 }
 :host .control button:hover {
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.5s;;
   background-color: rgba(255, 255, 255, 0.15);
 }
 :host .control button:active {
   background-color: rgba(255, 255, 255, 0.4);
+}
+:host .control button.flip {
+  transform: rotate(180deg);
 }
 :host .control button::-moz-focus-inner {
   border: 0;
@@ -119,7 +126,7 @@ class MelodyPlayer extends HTMLElement {
   background-color: currentColor;
 }
 :host .control .porgress .play::after {
-  content: " ";
+  content: ' ';
   cursor: pointer;
   color: white;
   position: absolute;
@@ -260,7 +267,7 @@ class MelodyPlayer extends HTMLElement {
                 if (bf) { bf.classList.remove('active'); }
                 const cur = this.lyrics[current];
                 cur.classList.add('active');
-                let offset = this.containerDisplay.clientHeight / 2
+                let offset = 150 / 2
                     - cur.clientHeight / 2
                     - cur.offsetTop
                     - 16;
@@ -276,6 +283,20 @@ class MelodyPlayer extends HTMLElement {
             this._loopMode = value;
             const elm = this.btnLoop;
             elm.textContent = elm.dataset[MelodyPlayer.LoopMode[value]];
+        }
+    }
+
+    get displayVisible() { return this._displayVisible; }
+    set displayVisible(value) {
+        if (value !== this._displayVisible) {
+            if (value === true) {
+                this.btnLyric.classList.add('flip');
+                this.containerDisplay.classList.add('active');
+            } else {
+                this.btnLyric.classList.remove('flip');
+                this.containerDisplay.classList.remove('active');
+            }
+            this._displayVisible = value;
         }
     }
 
@@ -301,6 +322,7 @@ class MelodyPlayer extends HTMLElement {
     init() {
         this.playing = false;
         this.loopMode = MelodyPlayer.LoopMode.Once;
+        this.displayVisible = false;
         if (this.audios.length > 0) {
             this.playIndex = 0;
         }
@@ -462,7 +484,7 @@ class MelodyPlayer extends HTMLElement {
             this.updateProgress();
             this._currentSecond = Math.floor(time);
         }
-        if (this._lyricStatus === 1) { // Loaded
+        if (this._lyricStatus === 1 && this._displayVisible) { // Loaded
             this.nextLyricIndex();
         }
         if (this._playing) {
@@ -554,8 +576,14 @@ class MelodyPlayer extends HTMLElement {
         const progress = (ev.clientX - start) / this.progressFull.offsetWidth;
         au.currentTime = progress * au.duration;
         this.syncProgress();
+        if (this._displayVisible) {
         this.nextLyricIndex();
+        }
         this._currentSecond = Math.floor(au.currentTime);
+    }
+
+    handleToggleDisplay() {
+        this.displayVisible = !this._displayVisible;
     }
 
     render() {
@@ -594,6 +622,7 @@ class MelodyPlayer extends HTMLElement {
         this.btnPlay.addEventListener('click', () => this.handlePlayOrPause());
         this.btnPrev.addEventListener('click', () => this.handleNext(-1));
         this.btnNext.addEventListener('click', () => this.handleNext(1));
+        this.btnLyric.addEventListener('click', () => this.handleToggleDisplay());
         this.btnLoop.addEventListener('click', () => this.handleLoopMode());
         this.progressFull.addEventListener('click', ev => this.handleProgressPeek(ev));
     }
@@ -607,7 +636,7 @@ class MelodyPlayer extends HTMLElement {
         this.audios = [];
         /** @type {number} */
         this._playIndex = null;
-        /** @type {boolean} */
+        /** @type {number} */
         this._lyricStatus = null;
         /** @type {HTMLParagraphElement[]} */
         this.lyrics = null;
@@ -615,6 +644,8 @@ class MelodyPlayer extends HTMLElement {
         this._lyricIndex = null;
         /** @type {number} */
         this._loopMode = null;
+        /** @type {boolean} */
+        this._displayVisible = null;
         /** @type {HTMLDivElement} */
         this.containerDisplay = null;
         /** @type {HTMLDivElement} */
