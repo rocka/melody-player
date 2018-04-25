@@ -1,6 +1,6 @@
 class MelodyPlayer extends HTMLElement {
     static get stylesheet() {
-        return `:host {
+        return `main {
   display: block;
   font-family: sans-serif;
   margin: 8px;
@@ -9,37 +9,37 @@ class MelodyPlayer extends HTMLElement {
   background-color: #282c34;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
-:host .display {
+main .display {
   position: relative;
   font-size: 14px;
   height: 0;
   overflow: hidden;
   transition: height 0.5s;
 }
-:host .display .lyric {
+main .display .lyric {
   transform: translateY(0);
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-:host .display .lyric .line {
+main .display .lyric .line {
   opacity: 0.4;
   margin: 16px 0;
   white-space: pre-wrap;
   text-align: center;
   transition: color 0.5s, opacity 0.5s;
 }
-:host .display .lyric .line.active {
+main .display .lyric .line.active {
   color: white;
   opacity: 1;
   text-shadow: 0 0 0.3px currentColor;
 }
-:host .display .lyric.mask {
+main .display .lyric.mask {
   position: relative;
   top: calc(47%);
 }
-:host .display.active {
+main .display.active {
   height: 150px;
 }
-:host .display .shadow {
+main .display .shadow {
   content: ' ';
   position: absolute;
   display: block;
@@ -47,7 +47,7 @@ class MelodyPlayer extends HTMLElement {
   height: 45px;
   z-index: 1;
 }
-:host .display::before {
+main .display::before {
   content: ' ';
   position: absolute;
   display: block;
@@ -57,7 +57,7 @@ class MelodyPlayer extends HTMLElement {
   top: 0;
   background-image: linear-gradient(#282c34, transparent);
 }
-:host .display::after {
+main .display::after {
   content: ' ';
   position: absolute;
   display: block;
@@ -67,11 +67,11 @@ class MelodyPlayer extends HTMLElement {
   bottom: 0;
   background-image: linear-gradient(transparent, #282c34);
 }
-:host .control {
+main .control {
   display: flex;
   align-items: center;
 }
-:host .control button {
+main .control button {
   color: #abb2bf;
   font: 20px 'MelodyPlayerIcons';
   display: inline-block;
@@ -88,20 +88,20 @@ class MelodyPlayer extends HTMLElement {
   transition: background-color 0.5s, transform 0.5s;
   -webkit-tap-highlight-color: transparent;
 }
-:host .control button:hover {
-  transition: background-color 0.2s, transform 0.5s;;
+main .control button:hover {
+  transition: background-color 0.2s, transform 0.5s;
   background-color: rgba(255, 255, 255, 0.15);
 }
-:host .control button:active {
+main .control button:active {
   background-color: rgba(255, 255, 255, 0.4);
 }
-:host .control button.flip {
+main .control button.flip {
   transform: rotate(180deg);
 }
-:host .control button::-moz-focus-inner {
+main .control button::-moz-focus-inner {
   border: 0;
 }
-:host .control .porgress {
+main .control .porgress {
   cursor: pointer;
   position: relative;
   margin-left: 8px;
@@ -110,22 +110,22 @@ class MelodyPlayer extends HTMLElement {
   color: #61aeee;
   background-color: rgba(0, 0, 0, 0.6);
 }
-:host .control .porgress div {
+main .control .porgress div {
   width: 0;
   height: inherit;
   position: absolute;
   transition: width 1s linear;
 }
-:host .control .porgress div.peek {
+main .control .porgress div.peek {
   transition: width 0.2s;
 }
-:host .control .porgress .load {
+main .control .porgress .load {
   background-color: rgba(255, 255, 255, 0.3);
 }
-:host .control .porgress .play {
+main .control .porgress .play {
   background-color: currentColor;
 }
-:host .control .porgress .play::after {
+main .control .porgress .play::after {
   content: ' ';
   cursor: pointer;
   color: white;
@@ -140,18 +140,22 @@ class MelodyPlayer extends HTMLElement {
   background-color: currentColor;
   transition: border 0.2s, top 0.2s, right 0.2s;
 }
-:host .control .porgress:hover .play::after {
+main .control .porgress:hover .play::after {
   border-width: 6px 3px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
   top: -6px;
   right: -3px;
 }
-:host .control .timer {
+main .control .timer {
   font-size: 14px;
   margin-left: 8px;
 }
-:host .control .control-right {
+main .control .control-right {
   margin-left: 8px;
+}
+main[single] .control-left button:first-child,
+main[single] .control-left button:last-child {
+  display: none;
 }`;
     }
 
@@ -217,6 +221,18 @@ class MelodyPlayer extends HTMLElement {
      */
     static hide(elm, hide = true) {
         elm.style.display = hide ? 'none' : '';
+    }
+
+    get singleMode() { return this._singleMode; }
+    set singleMode(value) {
+        if (value !== this._singleMode) {
+            if (value === true) {
+                this.hostElem.setAttribute('single', '');
+            } else {
+                this.hostElem.removeAttribute('single');
+            }
+            this._singleMode = value;
+        }
     }
 
     get playing() { return this._playing; }
@@ -323,8 +339,10 @@ class MelodyPlayer extends HTMLElement {
         this.playing = false;
         this.loopMode = MelodyPlayer.LoopMode.Once;
         this.displayVisible = false;
-        if (this.audios.length > 0) {
+        const { length } = this.audios;
+        if (length > 0) {
             this.playIndex = 0;
+            this.singleMode = length === 1;
         }
     }
 
@@ -466,7 +484,7 @@ class MelodyPlayer extends HTMLElement {
             if (au.currentTime < activeTime) {
                 // audio seek back, loop lyric from 0
                 loopStart = 0;
-        }
+            }
         }
         for (let i = loopStart; i < this.lyrics.length; i++) {
             const elm = this.lyrics[i];
@@ -480,6 +498,11 @@ class MelodyPlayer extends HTMLElement {
 
     handleAudioPlaying() {
         const time = this.audios[this.playIndex].currentTime;
+        // audio loop when `this._singleMode` true
+        if (time < this._currentSecond) {
+            this.syncProgress();
+            this._currentSecond = Math.floor(time);
+        }
         if (time - this._currentSecond > 1) {
             this.updateProgress();
             this._currentSecond = Math.floor(time);
@@ -563,7 +586,16 @@ class MelodyPlayer extends HTMLElement {
     }
 
     handleLoopMode() {
-        this.loopMode = (this.loopMode + 1) % 4;
+        if (this._singleMode) {
+            if (this._loopMode === 1) {
+                this.loopMode = 0;
+            } else {
+                this.loopMode = 1;
+            }
+            this.audios[0].loop = this._loopMode === 1;
+        } else {
+            this.loopMode = (this.loopMode + 1) % 4;
+        }
     }
 
     /**
@@ -577,7 +609,7 @@ class MelodyPlayer extends HTMLElement {
         au.currentTime = progress * au.duration;
         this.syncProgress();
         if (this._displayVisible) {
-        this.nextLyricIndex();
+            this.nextLyricIndex();
         }
         this._currentSecond = Math.floor(au.currentTime);
     }
@@ -592,16 +624,13 @@ class MelodyPlayer extends HTMLElement {
         style.appendChild(document.createTextNode(MelodyPlayer.stylesheet));
         /** @type {HTMLTemplateElement} */
         const tmpl = document.getElementById('mldy-tmpl');
-        let dom = document.importNode(tmpl.content, true);
-        if (~navigator.userAgent.toLowerCase().indexOf('firefox')) {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('melody-player');
-            wrapper.appendChild(dom);
-            dom = wrapper;
-            style.textContent = style.textContent.replace(/:host/g, '.melody-player');
-        }
+        const dom = document.importNode(tmpl.content, true);
+        const main = document.createElement('main');
+        main.appendChild(dom);
+        this.hostElem = main;
+        style.textContent = style.textContent.replace(/:host/g, 'main');
         shadow.appendChild(style);
-        shadow.appendChild(dom);
+        shadow.appendChild(main);
         // DOM element reference
         this.containerDisplay = shadow.getElementById('container-disp');
         this.lyricMaskLoading = shadow.getElementById('lyric-mask-loading');
@@ -629,6 +658,8 @@ class MelodyPlayer extends HTMLElement {
 
     constructor() {
         super();
+        /** @type {boolean} */
+        this._singleMode = null;
         this._currentSecond = 0;
         /** @type {boolean} */
         this._playing = null;
@@ -646,6 +677,8 @@ class MelodyPlayer extends HTMLElement {
         this._loopMode = null;
         /** @type {boolean} */
         this._displayVisible = null;
+        /** @type {HTMLElement} */
+        this.hostElem = null;
         /** @type {HTMLDivElement} */
         this.containerDisplay = null;
         /** @type {HTMLDivElement} */
