@@ -7,3 +7,6 @@ assets/22716849.lrc.zh.txt filter=lfs diff=lfs merge=lfs -text
 assets/22760378.lrc.jp.txt filter=lfs diff=lfs merge=lfs -text
 assets/22760378.lrc.zh.txt filter=lfs diff=lfs merge=lfs -text
 assets/27853205.lrc.jp.txt filter=lfs diff=lfs merge=lfs -text
+dist/player.js filter=lfs diff=lfs merge=lfs -text
+dist/player.min.js filter=lfs diff=lfs merge=lfs -text
+dist/player.min.js.map filter=lfs diff=lfs merge=lfs -text

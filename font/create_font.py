@@ -86,6 +86,12 @@ lookup.append(ligature_subst)
 for letter, names in liga_map.items():
     ligature_set = create_ligature_set(letter)
     ligature_subst.append(ligature_set)
+    # sort the liga items by length in reverse order. if not,
+    # `<Ligature components="e,p,e,a,t" glyph="uniE040"/>`
+    # would override
+    # `<Ligature components="e,p,e,a,t,underscore,o,n,e" glyph="uniE041"/>`
+    # as `uniE040,underscore,o,n,e` , ruins the icon
+    names.sort(key=len, reverse=True)
     for name in names:
         compo = sub(r'(\w)', r'\1,', name)[2:-1].replace('_', 'underscore')
         try:
