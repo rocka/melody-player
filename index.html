@@ -6,46 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Melody Player Demo</title>
-    <script src="https://rawgit.com/weirongxu/lrc-kit/master/dist/lrc-kit.min.js"></script>
-    <script src="index.js"></script>
+    <script src="./dist/player.min.js"></script>
     <style>
-    body {
-        margin: 0;
-    }
-    main {
-        margin: 1rem auto;
-        padding: 1rem;
-        max-width: 900px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
-    }
+        body {
+            margin: 0;
+        }
+        main {
+            margin: 1rem auto;
+            padding: 1rem;
+            max-width: 900px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        }
     </style>
 </head>
 
 <body>
-    <template id="mldy-tmpl">
-        <div id="container-disp" class="display">
-            <div id="lyric-mask-loading" class="lyric mask"><p class="line">歌词加载中<br>Loading Lyric<br>歌詞を読み込む</p></div>
-            <div id="lyric-mask-failed" class="lyric mask"><p class="line">歌词加载失败<br>Failed to Load Lyric<br>歌詞を読み込めません</p></div>
-            <div id="lyric-mask-none" class="lyric mask"><p class="line">暂无歌词<br>No Lyric<br>歌詞なし</p></div>
-            <div id="container-lrc" class="lyric"></div>
-        </div>
-        <div class="control">
-        <div class="control-left">
-            <button id="btn-prev">skip_previous</button>
-            <button id="btn-play" data-play="play_arrow" data-pause="pause">stop</button>
-            <button id="btn-next">skip_next</button>
-        </div>
-        <div id="prog-full" class="porgress">
-            <div id="prog-load" class="load"></div>
-            <div id="prog-play" class="play"></div>
-        </div>
-        <div class="timer"><span id="timer-play">0:00</span> / <span id="timer-total">0:00</span></div>
-        <div class="control-right">
-            <button id="btn-loop" data-once="subdirectory_arrow_right" data-single="repeat_one" data-list="repeat" data-shuffle="shuffle">cancel</button>
-            <button id="btn-lyric">keyboard_capslock</button>
-        </div>
-        </div>
-    </template>
     <main>
         <h1>MelodyPlayer Demo</h1>
         <hr>
