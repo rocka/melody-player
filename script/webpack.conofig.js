@@ -3,9 +3,10 @@
 const { resolve, join } = require('path');
 
 const context = resolve(__dirname, '..');
+const isProd = process.env.NODE_ENV === 'production';
 
 const cfg = {
-    mode: 'development',
+    mode: process.env.NODE_ENV,
     context,
     entry: {
         player: './src/player.jsx'
@@ -30,22 +31,22 @@ const cfg = {
             {
                 test: /\.less$/,
                 use: [
-                    { loader: 'raw-loader' },
+                    {
+                        loader: 'css-loader',
+                        options: {  minimize: isProd }
+                    },
                     { loader: 'less-loader' }
                 ]
             },
             {
                 test: /\.woff2$/,
-                use: {
-                    loader: 'url-loader'
-                }
+                use: { loader: 'url-loader'  }
             }
         ]
     }
 };
 
-if (process.env.NODE_ENV === 'production') {
-    cfg.mode = 'production';
+if (isProd) {
     cfg.devtool = 'source-map';
     cfg.output.filename = '[name].min.js'
     cfg.module.rules.forEach(rule => {

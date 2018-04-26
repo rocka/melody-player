@@ -1,163 +1,13 @@
+'use strict';
+
+import { Lrc } from 'lrc-kit';
+
+import h from './h.js'; // eslint-disable-line no-unused-vars
+import PLAYER_STYLE from './player.less';
+import PLAYER_FONT_FACE from  './font-face.less';
+
 class MelodyPlayer extends HTMLElement {
-    static get stylesheet() {
-        return `main {
-  display: block;
-  font-family: sans-serif;
-  margin: 8px;
-  padding: 8px;
-  color: #abb2bf;
-  background-color: #282c34;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
-}
-main .display {
-  position: relative;
-  font-size: 14px;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.5s;
-}
-main .display .lyric {
-  transform: translateY(0);
-  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-main .display .lyric .line {
-  opacity: 0.4;
-  margin: 16px 0;
-  white-space: pre-wrap;
-  text-align: center;
-  transition: color 0.5s, opacity 0.5s;
-}
-main .display .lyric .line.active {
-  color: white;
-  opacity: 1;
-  text-shadow: 0 0 0.3px currentColor;
-}
-main .display .lyric.mask {
-  position: relative;
-  top: calc(47%);
-}
-main .display.active {
-  height: 150px;
-}
-main .display .shadow {
-  content: ' ';
-  position: absolute;
-  display: block;
-  width: 100%;
-  height: 45px;
-  z-index: 1;
-}
-main .display::before {
-  content: ' ';
-  position: absolute;
-  display: block;
-  width: 100%;
-  height: 45px;
-  z-index: 1;
-  top: 0;
-  background-image: linear-gradient(#282c34, transparent);
-}
-main .display::after {
-  content: ' ';
-  position: absolute;
-  display: block;
-  width: 100%;
-  height: 45px;
-  z-index: 1;
-  bottom: 0;
-  background-image: linear-gradient(transparent, #282c34);
-}
-main .control {
-  display: flex;
-  align-items: center;
-}
-main .control button {
-  color: #abb2bf;
-  font: 20px 'MelodyPlayerIcons';
-  display: inline-block;
-  box-sizing: content-box;
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  border: none;
-  margin: 0;
-  padding: 0;
-  outline: none;
-  cursor: pointer;
-  background-color: transparent;
-  transition: background-color 0.5s, transform 0.5s;
-  -webkit-tap-highlight-color: transparent;
-}
-main .control button:hover {
-  transition: background-color 0.2s, transform 0.5s;
-  background-color: rgba(255, 255, 255, 0.15);
-}
-main .control button:active {
-  background-color: rgba(255, 255, 255, 0.4);
-}
-main .control button.flip {
-  transform: rotate(180deg);
-}
-main .control button::-moz-focus-inner {
-  border: 0;
-}
-main .control .porgress {
-  cursor: pointer;
-  position: relative;
-  margin-left: 8px;
-  flex-grow: 1;
-  height: 12px;
-  color: #61aeee;
-  background-color: rgba(0, 0, 0, 0.6);
-}
-main .control .porgress div {
-  width: 0;
-  height: inherit;
-  position: absolute;
-  transition: width 1s linear;
-}
-main .control .porgress div.peek {
-  transition: width 0.2s;
-}
-main .control .porgress .load {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-main .control .porgress .play {
-  background-color: currentColor;
-}
-main .control .porgress .play::after {
-  content: ' ';
-  cursor: pointer;
-  color: white;
-  position: absolute;
-  box-sizing: content-box;
-  width: 2px;
-  height: inherit;
-  right: 0;
-  top: 0;
-  border: 0 solid currentColor;
-  box-shadow: 0 0 0 transparent;
-  background-color: currentColor;
-  transition: border 0.2s, top 0.2s, right 0.2s;
-}
-main .control .porgress:hover .play::after {
-  border-width: 6px 3px;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-  top: -6px;
-  right: -3px;
-}
-main .control .timer {
-  font-size: 14px;
-  margin-left: 8px;
-}
-main .control .control-right {
-  margin-left: 8px;
-}
-main[single] .control-left button:first-child,
-main[single] .control-left button:last-child {
-  display: none;
-}`;
-    }
+    static get TagName() { return 'melody-player'; }
 
     static get LoopMode() {
         return {
@@ -182,7 +32,7 @@ main[single] .control-left button:last-child {
             1: 'loaded',
             2: 'failed',
             3: 'none'
-        }
+        };
     }
 
     static get LogTag() {
@@ -190,11 +40,11 @@ main[single] .control-left button:last-child {
     }
 
     static log(...args) {
-        console.log(MelodyPlayer.LogTag, ...args);
+        console.log(MelodyPlayer.LogTag, ...args); // eslint-disable-line no-console
     }
 
     static err(...args) {
-        console.error(MelodyPlayer.LogTag, ...args);
+        console.error(MelodyPlayer.LogTag, ...args); // eslint-disable-line no-console
     }
 
     static percent(num) {
@@ -406,7 +256,7 @@ main[single] .control-left button:last-child {
                         })
                         .then(t => {
                             try {
-                                au[k] = { status: 1, ...window.LrcKit.Lrc.parse(t) };
+                                au[k] = Object.assign({ status: 1 }, Lrc.parse(t));
                             } catch (e) {
                                 MelodyPlayer.err('parse lrc', e);
                                 au[k] = { status: 2, lyrics: [] }; // Failed
@@ -460,11 +310,12 @@ main[single] .control-left button:last-child {
         }
         const frag = document.createDocumentFragment();
         for (const line of lyrics) {
-            const elm = document.createElement('p');
-            elm.classList.add('line');
+            const elm = <p class='line' data-timestamp={line.timestamp}>{line.content}</p>;
+            // const elm = document.createElement('p');
+            // elm.classList.add('line');
             elm.timestamp = line.timestamp;
-            elm.dataset['timestamp'] = line.timestamp;
-            elm.appendChild(document.createTextNode(line.content));
+            // elm.dataset['timestamp'] = line.timestamp;
+            // elm.appendChild(document.createTextNode(line.content));
             frag.appendChild(elm);
             lyricElms.push(elm);
         }
@@ -614,40 +465,35 @@ main[single] .control-left button:last-child {
 
     render() {
         const shadow = this.attachShadow({ mode: 'open' });
-        const style = document.createElement('style');
-        style.appendChild(document.createTextNode(MelodyPlayer.stylesheet));
-        /** @type {HTMLTemplateElement} */
-        const tmpl = document.getElementById('mldy-tmpl');
-        const dom = document.importNode(tmpl.content, true);
-        const main = document.createElement('main');
-        main.appendChild(dom);
-        this.hostElem = main;
-        style.textContent = style.textContent.replace(/:host/g, 'main');
+        const style = <style>{PLAYER_STYLE.toString()}</style>;
+        this.hostElem = (
+            <main>
+                <div ref={r => this.containerDisplay = r} class="display">
+                    <div ref={r => this.lyricMaskLoading = r} class="lyric mask"><p class="line">{'歌词加载中\nLoading Lyric\n歌詞を読み込む'}</p></div>
+                    <div ref={r => this.lyricMaskFailed = r} class="lyric mask"><p class="line">{'歌词加载失败\nFailed to Load Lyric\n歌詞を読み込めません'}</p></div>
+                    <div ref={r => this.lyricMaskNone = r} class="lyric mask"><p class="line">{'暂无歌词\nNo Lyric\n歌詞なし'}</p></div>
+                    <div ref={r => this.containerLyric = r} class="lyric"></div>
+                </div>
+                <div class="control">
+                    <div class="control-left">
+                        <button ref={r => this.btnPrev = r} onClick={() => this.handleNext(-1)}>skip_previous</button>
+                        <button ref={r => this.btnPlay = r} onClick={ev => this.handlePlayOrPause(ev)} data-play="play_arrow" data-pause="pause">stop</button>
+                        <button ref={r => this.btnNext = r} onClick={() => this.handleNext()}>skip_next</button>
+                    </div>
+                    <div ref={r => this.progressFull = r} onClick={ev => this.handleProgressPeek(ev)} class="porgress">
+                        <div ref={r => this.progressLoad = r} class="load"></div>
+                        <div ref={r => this.progressPlay = r} class="play"></div>
+                    </div>
+                    <div class="timer"><span ref={r => this.timerPlay = r}>0:00</span> / <span ref={r => this.timerTotal = r}>0:00</span></div>
+                    <div class="control-right">
+                        <button ref={r => this.btnLoop = r} onClick={() => this.handleLoopMode()} data-once="subdirectory_arrow_right" data-single="repeat_one" data-list="repeat" data-shuffle="shuffle">cancel</button>
+                        <button ref={r => this.btnLyric = r} onClick={() => this.handleToggleDisplay()}>keyboard_capslock</button>
+                    </div>
+                </div>
+            </main>
+        );
         shadow.appendChild(style);
-        shadow.appendChild(main);
-        // DOM element reference
-        this.containerDisplay = shadow.getElementById('container-disp');
-        this.lyricMaskLoading = shadow.getElementById('lyric-mask-loading');
-        this.lyricMaskFailed = shadow.getElementById('lyric-mask-failed');
-        this.lyricMaskNone = shadow.getElementById('lyric-mask-none');
-        this.containerLyric = shadow.getElementById('container-lrc');
-        this.progressFull = shadow.getElementById('prog-full');
-        this.progressPlay = shadow.getElementById('prog-play');
-        this.progressLoad = shadow.getElementById('prog-load');
-        this.timerPlay = shadow.getElementById('timer-play');
-        this.timerTotal = shadow.getElementById('timer-total');
-        this.btnPrev = shadow.getElementById('btn-prev');
-        this.btnPlay = shadow.getElementById('btn-play');
-        this.btnNext = shadow.getElementById('btn-next');
-        this.btnLyric = shadow.getElementById('btn-lyric');
-        this.btnLoop = shadow.getElementById('btn-loop');
-        // register DOM interactive events
-        this.btnPlay.addEventListener('click', () => this.handlePlayOrPause());
-        this.btnPrev.addEventListener('click', () => this.handleNext(-1));
-        this.btnNext.addEventListener('click', () => this.handleNext(1));
-        this.btnLyric.addEventListener('click', () => this.handleToggleDisplay());
-        this.btnLoop.addEventListener('click', () => this.handleLoopMode());
-        this.progressFull.addEventListener('click', ev => this.handleProgressPeek(ev));
+        shadow.appendChild(this.hostElem);
     }
 
     constructor() {
@@ -719,13 +565,7 @@ main[single] .control-left button:last-child {
     }
 }
 
-const MelodyPlayerStyle = document.createElement('style');
-MelodyPlayerStyle.appendChild(document.createTextNode(`@font-face {
-  font-family: 'MelodyPlayerIcons';
-  font-style: normal;
-  font-weight: 400;
-  src: url("data:font/woff2;base64,d09GMgABAAAAAAPIAA8AAAAACigAAANxAAEEWgAAAAAAAAAAAAAAAAAAAAAAAAAAGhwbEByCVAZgAIIACAQRCAqHCIQFATYCJANOC04ABCAFgnwHIBtUBwieg02ZnZVGZpm0i1Nb0lxy/ZfEw/P36rmvc+IeoI114sKNAekaVJrmqchPNRMw/OF5fn947tOHJyIBbgoZbGmLeSt5Pv9zv/v2MfEkonGS98WUqFotQaWJJw7ZLRHiavB/4JjywNZgWYQDm1iWRVtVIEQU0Hg8mg1sYLsf9AB080bxv+bhHeusk0n6BwjoB0gUUUvUaacI9IqlAAG9GvSRIm/VI4wBeQhEUaXgEQYBwTAQfBI5IzXh2jhhtCk4NbScUsoShlIok8gZMcWpUy+UUGoIpVSpXJU6llKhjNMBjVqn4JjlRC4DNPDTr8SKLTin51esSgXNCpVyjHK50n2Xi1IhX6Bci0QsVBDFKrBSyD7G2CxQWPtvq1auiSdQweNJOK27WKrWiKtuKWMS8skiDokcsBNfoyXdFxLbBoAYBgDw7KZ5TwEJEAAwoxfaoQ0WoBfeaQILNL+XcQvG5TTjhrtS+9rw2vXa9zrwkfZ1LwTO8Cm887XnM4VNYSP3N/c79zn3KfcxOyrjAATQ9QP3nD1w9m0PuAC3IKFS2/BMoNKAYRKVTsouwBQqPfR9gBlUBvDMo56GZwHN+196i4roBUQeClgCDsEWfEAGgG6A6JiKULRUsUYFvIzRQeC50CMKbYBBF8nPcBdJhaGO1AVDS0gkseNTEGEkckQTSQQJZbaPmbAwHQi3kymRWLiuUNBlbGWd9YjjKJasuoim4hMSzfFRBceUSULfR4giopNKgMfa71EFs+vWCnz//r3RPP6yFWMsHUFH5/XoHZBUamLyUrbLmR0toqXa3b1vt+8HZcq3qSKj3/+Ul+4nvf4J9FMlejPsPeFScKVwHOP1CeBpxuvpiuefAmB+wnIpeI6O/qOyfGF/B54AgIBoP19g/9ZvYltbYZEClGfsI8B/0M0GIP4iA90UEEhAAoU4QQAAIsEIsD77sWQwxtgjjhBYUk0DCYJAQQ1Al3Mi0h6Ac2AIUecWoaSeENqhyUqjIqwaf8/i9PjXw8DIxUxFQckqz4ghwyY1WWFgoKAlU6XJGj2JGk2WaWnl2V8XW+hlMhYyZnYyUjW28KyJXYWnrfKXMNCzLE1SsNHimfWnYmu0mynIDhIOOLDJTOGFHDF5xKh+w/ov0U45frQWKt2RZ9jAjblL+b2H6vO0RIBZDiMAAAA=") format("woff2");
-}`));
-document.head.appendChild(MelodyPlayerStyle);
-
-window.customElements.define('melody-player', MelodyPlayer);
+if (!window.customElements.get(MelodyPlayer.TagName)) {
+    window.customElements.define(MelodyPlayer.TagName, MelodyPlayer);
+    document.head.appendChild(<style>{PLAYER_FONT_FACE.toString()}</style>);
+}

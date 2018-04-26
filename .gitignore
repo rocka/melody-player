@@ -2,7 +2,7 @@
 .idea
 
 node_modules
-dist
+dist/*
 
 vendor
 *.css
@@ -11,3 +11,4 @@ font/*
 !font/*.py
 !font/icon-names.txt
 !dist/player.min.js
+!dist/player.min.js.map
