@@ -1,9 +1,13 @@
 .vscode
 .idea
 
+node_modules
+dist
+
 vendor
 *.css
 font/*
 !font/*.md
 !font/*.py
 !font/icon-names.txt
+!dist/player.min.js
