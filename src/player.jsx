@@ -4,7 +4,7 @@ import { Lrc } from 'lrc-kit';
 
 import h from './h.js'; // eslint-disable-line no-unused-vars
 import PLAYER_STYLE from './player.less';
-import PLAYER_FONT_FACE from  './font-face.less';
+import PLAYER_FONT_FACE from './font-face.less';
 
 class MelodyPlayer extends HTMLElement {
     static get TagName() { return 'melody-player'; }
@@ -108,7 +108,7 @@ class MelodyPlayer extends HTMLElement {
                 this.timerTotal.textContent = MelodyPlayer.time(au.duration);
             }
             this.syncProgress();
-            this.fetchLyric().then(() => this.renderLyric());
+            this.fetchLyric().then(shouldRender => shouldRender ? this.renderLyric() : null);
         }
     }
 
@@ -167,6 +167,11 @@ class MelodyPlayer extends HTMLElement {
     }
 
     /**
+     * current playing audio element
+     */
+    get au() { return this.audios[this._playIndex]; }
+
+    /**
      * add audio to `this.audios` and add event listeners
      * @param {HTMLAudioElement} audio
      */
@@ -200,15 +205,17 @@ class MelodyPlayer extends HTMLElement {
     }
 
     updateProgress() {
-        const au = this.audios[this.playIndex];
-        this.timerPlay.textContent = MelodyPlayer.time(au.currentTime);
-        const played = au.currentTime / au.duration;
+        const { buffered, currentTime, duration } = this.au;
+        const played = currentTime / duration;
         let loaded = 0;
-        if (au.buffered.length !== 0) {
-            loaded = au.buffered.end(au.buffered.length - 1) / au.duration;
+        if (buffered.length !== 0) {
+            loaded = buffered.end(buffered.length - 1) / duration;
         }
-        this.progressPlay.style.width = MelodyPlayer.percent(played);
-        this.progressLoad.style.width = MelodyPlayer.percent(loaded);
+        window.requestAnimationFrame(() => {
+            this.timerPlay.textContent = MelodyPlayer.time(currentTime);
+            this.progressPlay.style.width = MelodyPlayer.percent(played);
+            this.progressLoad.style.width = MelodyPlayer.percent(loaded);
+        });
     }
 
     syncProgress() {
@@ -232,52 +239,50 @@ class MelodyPlayer extends HTMLElement {
     }
 
     /**
-     * fetch lrc to au props
-     * @returns {Promise<void>}
+     * fetch lrc and attach them to audio element props
      */
     fetchLyric() {
         this.lyricStatus = 0; // Loading
-        const au = this.audios[this.playIndex];
+        const au = this.audios[this._playIndex];
         const urls = {
             lrc: au.dataset['lrc'],
             subLrc: au.dataset['subLrc']
         };
         // TODO: cache lyric; retry when cache invalid
         // maybe the browser would do it?
-        return Promise.all(
-            Object.entries(urls).map(([k, v]) => {
-                if (v) {
-                    return fetch(v)
-                        .then(r => {
-                            if (r.status === 200) {
-                                return r.text();
-                            }
-                            throw r;
-                        })
-                        .then(t => {
-                            try {
-                                au[k] = Object.assign({ status: 1 }, Lrc.parse(t));
-                            } catch (e) {
-                                MelodyPlayer.err('parse lrc', e);
-                                au[k] = { status: 2, lyrics: [] }; // Failed
-                            }
-                        })
-                        .catch(e => {
-                            MelodyPlayer.err('fetch lyric', e);
+        /** @type {Promise<void>[]} */
+        const prom = Object.entries(urls)
+            .filter(i => i[1])
+            .map(([k, v]) => {
+                return fetch(v)
+                    .then(r => {
+                        if (r.status === 200) {
+                            return r.text();
+                        }
+                        throw r;
+                    })
+                    .then(t => {
+                        try {
+                            au[k] = Object.assign({ status: 1 }, Lrc.parse(t));
+                        } catch (e) {
+                            MelodyPlayer.err('parse lrc', e);
                             au[k] = { status: 2, lyrics: [] }; // Failed
-                        });
-                } else {
-                    au[k] = { status: 3, lyrics: [] }; // None
-                }
-            })
-        );
+                        }
+                    })
+                    .catch(e => {
+                        MelodyPlayer.err('fetch lyric', e);
+                        au[k] = { status: 2, lyrics: [] }; // Failed
+                    });
+            });
+        // if playIndex changed when fetching lyric, then shouldn't be rendered
+        return Promise.all(prom).then(() => au === this.au);
     }
 
     /**
      * render to lrc element
      */
     renderLyric() {
-        const au = this.audios[this.playIndex];
+        const au = this.audios[this._playIndex];
         if (au.lrc.status === 3 && au.subLrc.status === 3) { // None
             this.lyricStatus = 3;
             return;
@@ -311,11 +316,7 @@ class MelodyPlayer extends HTMLElement {
         const frag = document.createDocumentFragment();
         for (const line of lyrics) {
             const elm = <p class='line' data-timestamp={line.timestamp}>{line.content}</p>;
-            // const elm = document.createElement('p');
-            // elm.classList.add('line');
             elm.timestamp = line.timestamp;
-            // elm.dataset['timestamp'] = line.timestamp;
-            // elm.appendChild(document.createTextNode(line.content));
             frag.appendChild(elm);
             lyricElms.push(elm);
         }
@@ -329,13 +330,13 @@ class MelodyPlayer extends HTMLElement {
         if (this._lyricStatus !== 1) { // Not Loaded
             return this.lyricIndex = 0;
         }
-        const au = this.audios[this.playIndex];
+        const { currentTime } = this.au;
         let loopStart = this._lyricIndex || 0;
         // decide where to start loop
         const activeLyric = this.lyrics[this._lyricIndex];
         if (activeLyric) {
             const activeTime = activeLyric.timestamp || +activeLyric.dataset['timestamp'];
-            if (au.currentTime < activeTime) {
+            if (currentTime < activeTime) {
                 // audio seek back, loop lyric from 0
                 loopStart = 0;
             }
@@ -343,7 +344,7 @@ class MelodyPlayer extends HTMLElement {
         for (let i = loopStart; i < this.lyrics.length; i++) {
             const elm = this.lyrics[i];
             const time = elm.timestamp || +elm.dataset['timestamp'];
-            if (time > au.currentTime) {
+            if (time > currentTime) {
                 return this.lyricIndex = !i ? 0 : i - 1;
             }
         }
@@ -351,7 +352,7 @@ class MelodyPlayer extends HTMLElement {
     }
 
     handleAudioPlaying() {
-        const time = this.audios[this.playIndex].currentTime;
+        const time = this.au.currentTime;
         // audio loop when `this._singleMode` true
         if (time < this._currentSecond) {
             this.syncProgress();
@@ -370,18 +371,16 @@ class MelodyPlayer extends HTMLElement {
     }
 
     _play() {
-        const au = this.audios[this.playIndex];
-        return au.play();
+        return this.au.play();
     }
 
     /**
      * @param {number} position time to seek after pause
      */
     _pause(position = true) {
-        const au = this.audios[this.playIndex];
-        au.pause();
+        this.au.pause();
         if (position === 0) {
-            au.currentTime = 0;
+            this.au.currentTime = 0;
         }
     }
 
