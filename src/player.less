@@ -1,4 +1,4 @@
-main {
+.player-main {
     display: block;
     font-family: sans-serif;
     margin: 8px;
@@ -60,6 +60,7 @@ main {
         button {
             color: #abb2bf;
             font: 20px 'MelodyPlayerIcons';
+            font-feature-settings: 'liga' 1;
             display: inline-block;
             box-sizing: content-box;
             width: 32px;
@@ -103,7 +104,7 @@ main {
                 height: inherit;
                 position: absolute;
                 transition: width 1s linear;
-                &.peek {
+                &.seek {
                     transition: width 0.2s;
                 }
             }

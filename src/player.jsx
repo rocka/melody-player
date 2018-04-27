@@ -221,8 +221,8 @@ class MelodyPlayer extends HTMLElement {
     syncProgress() {
         /** @param {HTMLDivElement} elm */
         function tiggerSeek(elm, t = 0.2) {
-            elm.classList.add('peek');
-            setTimeout(() => elm.classList.remove('peek'), t * 1000);
+            elm.classList.add('seek');
+            setTimeout(() => elm.classList.remove('seek'), t * 1000);
         }
         tiggerSeek(this.progressPlay);
         tiggerSeek(this.progressLoad);
@@ -448,7 +448,7 @@ class MelodyPlayer extends HTMLElement {
      */
     handleProgressSeek(ev) {
         const rect = this.progressFull.getBoundingClientRect();
-        const seekTime = (ev.clientX - rect.x) / rect.width * this.au.duration;
+        const seekTime = (ev.clientX - rect.left) / rect.width * this.au.duration;
         this.au.currentTime = seekTime;
         this.syncProgress();
         if (this._displayVisible) {
@@ -465,7 +465,7 @@ class MelodyPlayer extends HTMLElement {
         const shadow = this.attachShadow({ mode: 'open' });
         const style = <style>{PLAYER_STYLE.toString()}</style>;
         this.hostElem = (
-            <main>
+            <main class="player-main">
                 <div ref={r => this.containerDisplay = r} class="display">
                     <div ref={r => this.lyricMaskLoading = r} class="lyric mask"><p class="line">{'歌词加载中\nLoading Lyric\n歌詞を読み込む'}</p></div>
                     <div ref={r => this.lyricMaskFailed = r} class="lyric mask"><p class="line">{'歌词加载失败\nFailed to Load Lyric\n歌詞を読み込めません'}</p></div>
