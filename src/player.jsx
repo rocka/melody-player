@@ -213,12 +213,12 @@ class MelodyPlayer extends HTMLElement {
 
     syncProgress() {
         /** @param {HTMLDivElement} elm */
-        function tiggerPeek(elm, t = 0.2) {
+        function tiggerSeek(elm, t = 0.2) {
             elm.classList.add('peek');
             setTimeout(() => elm.classList.remove('peek'), t * 1000);
         }
-        tiggerPeek(this.progressPlay);
-        tiggerPeek(this.progressLoad);
+        tiggerSeek(this.progressPlay);
+        tiggerSeek(this.progressLoad);
         this.updateProgress();
     }
 
@@ -447,16 +447,15 @@ class MelodyPlayer extends HTMLElement {
      * handle click on progress bar
      * @param {MouseEvent} ev MouseEvent from click listener
      */
-    handleProgressPeek(ev) {
-        const au = this.audios[this.playIndex];
-        const start = this.progressFull.offsetLeft;
-        const progress = (ev.clientX - start) / this.progressFull.offsetWidth;
-        au.currentTime = progress * au.duration;
+    handleProgressSeek(ev) {
+        const rect = this.progressFull.getBoundingClientRect();
+        const seekTime = (ev.clientX - rect.x) / rect.width * this.au.duration;
+        this.au.currentTime = seekTime;
         this.syncProgress();
         if (this._displayVisible) {
             this.nextLyricIndex();
         }
-        this._currentSecond = Math.floor(au.currentTime);
+        this._currentSecond = Math.floor(seekTime);
     }
 
     handleToggleDisplay() {
@@ -480,7 +479,7 @@ class MelodyPlayer extends HTMLElement {
                         <button ref={r => this.btnPlay = r} onClick={ev => this.handlePlayOrPause(ev)} data-play="play_arrow" data-pause="pause">stop</button>
                         <button ref={r => this.btnNext = r} onClick={() => this.handleNext()}>skip_next</button>
                     </div>
-                    <div ref={r => this.progressFull = r} onClick={ev => this.handleProgressPeek(ev)} class="porgress">
+                    <div ref={r => this.progressFull = r} onClick={ev => this.handleProgressSeek(ev)} class="porgress">
                         <div ref={r => this.progressLoad = r} class="load"></div>
                         <div ref={r => this.progressPlay = r} class="play"></div>
                     </div>
