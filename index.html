@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Melody Player Demo</title>
+    <script>
+        (function () {
+            const sd = 'attachShadow' in Element.prototype;
+            const ce = 'customElements' in window;
+            if (!sd && !ce) {
+                document.write('<script src="https://rawgit.com/webcomponents/webcomponentsjs/master/webcomponents-sd-ce.js"><\/script>')
+                return;
+            }
+            !ce && document.write('<script src="https://rawgit.com/webcomponents/custom-elements/master/custom-elements.min.js"><\/script>')
+            !sd && document.write('<script src="https://rawgit.com/webcomponents/shadydom/master/shadydom.min.js"><\/script>')
+        })();
+    </script>
     <script src="./dist/player.min.js"></script>
     <style>
         body {
