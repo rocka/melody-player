@@ -1,10 +1,10 @@
 .player-main {
     display: block;
-    font-family: sans-serif;
+    font: 16px sans-serif;
     margin: 8px;
     padding: 8px;
     color: #abb2bf;
-    background-color: #282c34;
+    background: #282c34;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
     .display {
         position: relative;
@@ -60,8 +60,18 @@
         button {
             color: #abb2bf;
             font: 20px 'MelodyPlayerIcons';
+            /// from material-icons.css
+            font-weight: normal;
+            font-style: normal;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
             font-feature-settings: 'liga' 1;
             display: inline-block;
+            /// end
             box-sizing: content-box;
             width: 32px;
             height: 32px;
@@ -72,15 +82,15 @@
             user-select: none;
             outline: none;
             cursor: pointer;
-            background-color: transparent;
-            transition: background-color 0.5s, transform 0.5s;
+            background: transparent;
+            transition: 0.5s;
             -webkit-tap-highlight-color: transparent;
             &:hover {
                 transition: background-color 0.2s, transform 0.5s;
-                background-color: rgba(255, 255, 255, 0.15);
+                background: rgba(255, 255, 255, 0.15);
             }
             &:active {
-                background-color: rgba(255, 255, 255, 0.4);
+                background: rgba(255, 255, 255, 0.4);
             }
             &.flip {
                 transform: rotate(180deg);
@@ -98,10 +108,10 @@
             flex-grow: 1;
             height: 12px;
             color: #61aeee;
-            background-color: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.6);
             div {
                 width: 0;
-                height: inherit;
+                height: 100%;
                 position: absolute;
                 transition: width 1s linear;
                 &.seek {
@@ -109,10 +119,10 @@
                 }
             }
             .load {
-                background-color: rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.3);
             }
             .play {
-                background-color: currentColor;
+                background: currentColor;
                 &::after {
                     content: ' ';
                     cursor: pointer;
@@ -120,13 +130,13 @@
                     position: absolute;
                     box-sizing: content-box;
                     width: 2px;
-                    height: inherit;
+                    height: 100%;
                     right: 0;
                     top: 0;
                     border: 0 solid currentColor;
                     box-shadow: 0 0 0 transparent;
-                    background-color: currentColor;
-                    transition: border 0.2s, top 0.2s, right 0.2s;
+                    background: currentColor;
+                    transition: 0.2s;
                 }
             }
             &:hover {
