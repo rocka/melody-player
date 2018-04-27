@@ -8,11 +8,11 @@ WebComponent based music player.
 
 ## Borwser Compatibility
 
-Browsers that support [`Custom Elements v1`](cd1) and [`ShadowDOM v1`](sd1) are supported.
+Browsers that support [`Custom Elements v1`][ce1] and [`ShadowDOM v1`][sd1] are supported.
 
-Tested on Chrome 66, Firefox 59 with flags enabled.
+Tested on Chrome 66, Firefox 59 with flags enabled, Firefox / Microsoft Edge with Polyfill.
 
-Custom Elements polyfill: [webcomponents/custom-elements](wce)
+WebComponents polyfill: [webcomponents/webcomponentsjs][wcj]
 
 ## Usage
 
@@ -45,4 +45,4 @@ Custom Elements polyfill: [webcomponents/custom-elements](wce)
 
 [ce1]: https://caniuse.com/#feat=custom-elementsv1
 [sd1]: https://caniuse.com/#feat=shadowdomv1
-[wce]: https://github.com/webcomponents/custom-elements
+[wcj]: https://github.com/webcomponents/webcomponentsjs/blob/master/webcomponents-sd-ce.js
