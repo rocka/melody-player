@@ -465,15 +465,15 @@ class MelodyPlayer extends HTMLElement {
         const shadow = this.attachShadow({ mode: 'open' });
         const style = <style>{PLAYER_STYLE.toString()}</style>;
         this.hostElem = (
-            <main class="player-main">
-                <div ref={r => this.containerDisplay = r} class="display">
-                    <div ref={r => this.lyricMaskLoading = r} class="lyric mask"><p class="line">{'歌词加载中\nLoading Lyric\n歌詞を読み込む'}</p></div>
-                    <div ref={r => this.lyricMaskFailed = r} class="lyric mask"><p class="line">{'歌词加载失败\nFailed to Load Lyric\n歌詞を読み込めません'}</p></div>
-                    <div ref={r => this.lyricMaskNone = r} class="lyric mask"><p class="line">{'暂无歌词\nNo Lyric\n歌詞なし'}</p></div>
-                    <div ref={r => this.containerLyric = r} class="lyric"></div>
+            <div class="__mld__">
+                <div ref={r => this.containerDisplay = r} class="disp">
+                    <div ref={r => this.lyricMaskLoading = r} class="lrc mask"><p class="line">{'歌词加载中\nLoading Lyric\n歌詞を読み込む'}</p></div>
+                    <div ref={r => this.lyricMaskFailed = r} class="lrc mask"><p class="line">{'歌词加载失败\nFailed to Load Lyric\n歌詞を読み込めません'}</p></div>
+                    <div ref={r => this.lyricMaskNone = r} class="lrc mask"><p class="line">{'暂无歌词\nNo Lyric\n歌詞なし'}</p></div>
+                    <div ref={r => this.containerLyric = r} class="lrc"></div>
                 </div>
-                <div class="control">
-                    <div class="control-left">
+                <div class="ctl">
+                    <div class="ctl-left">
                         <button ref={r => this.btnPrev = r} onClick={() => this.handleNext(-1)}>skip_previous</button>
                         <button ref={r => this.btnPlay = r} onClick={ev => this.handlePlayOrPause(ev)} data-play="play_arrow" data-pause="pause">stop</button>
                         <button ref={r => this.btnNext = r} onClick={() => this.handleNext()}>skip_next</button>
@@ -483,12 +483,12 @@ class MelodyPlayer extends HTMLElement {
                         <div ref={r => this.progressPlay = r} class="play"></div>
                     </div>
                     <div class="timer"><span ref={r => this.timerPlay = r}>0:00</span> / <span ref={r => this.timerTotal = r}>0:00</span></div>
-                    <div class="control-right">
+                    <div class="ctl-right">
                         <button ref={r => this.btnLoop = r} onClick={() => this.handleLoopMode()} data-once="subdirectory_arrow_right" data-single="repeat_one" data-list="repeat" data-shuffle="shuffle">cancel</button>
                         <button ref={r => this.btnLyric = r} onClick={() => this.handleToggleDisplay()}>keyboard_capslock</button>
                     </div>
                 </div>
-            </main>
+            </div>
         );
         shadow.appendChild(style);
         shadow.appendChild(this.hostElem);
