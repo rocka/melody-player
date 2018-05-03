@@ -7,18 +7,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Melody Player Demo</title>
     <script>
-        (function () {
-            const sd = 'attachShadow' in Element.prototype;
-            const ce = 'customElements' in window;
-            if (!sd && !ce) {
-                document.write('<script src="https://rawgit.com/webcomponents/webcomponentsjs/master/webcomponents-sd-ce.js"><\/script>')
-                return;
-            }
-            !ce && document.write('<script src="https://rawgit.com/webcomponents/custom-elements/master/custom-elements.min.js"><\/script>')
-            !sd && document.write('<script src="https://rawgit.com/webcomponents/shadydom/master/shadydom.min.js"><\/script>')
-        })();
+(function (w, d) {
+    function i(p) { var s = d.createElement('script'); s.src = p; s.defer = true; d.head.appendChild(s); }
+    var sd = 'attachShadow' in Element.prototype;
+    var ce = 'customElements' in window;
+    if (!sd && !ce) i('https://rawgit.com/webcomponents/webcomponentsjs/master/webcomponents-sd-ce.js');
+    else if(!ce) i('https://rawgit.com/webcomponents/custom-elements/master/custom-elements.min.js');
+    else if(!sd) i('https://rawgit.com/webcomponents/shadydom/master/shadydom.min.js');
+    i('./dist/player.min.js');
+})(window, document);
     </script>
-    <script src="./dist/player.min.js"></script>
     <style>
         body {
             margin: 0;
