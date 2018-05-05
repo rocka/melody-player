@@ -10,3 +10,6 @@ assets/27853205.lrc.jp.txt filter=lfs diff=lfs merge=lfs -text
 dist/player.js filter=lfs diff=lfs merge=lfs -text
 dist/player.min.js filter=lfs diff=lfs merge=lfs -text
 dist/player.min.js.map filter=lfs diff=lfs merge=lfs -text
+assets/412902325.lrc.jp.txt filter=lfs diff=lfs merge=lfs -text
+assets/412902325.lrc.zh.txt filter=lfs diff=lfs merge=lfs -text
+assets/412902325.mp3 filter=lfs diff=lfs merge=lfs -text
