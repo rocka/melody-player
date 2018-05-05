@@ -76,11 +76,13 @@ class MelodyPlayer extends HTMLElement {
     get singleMode() { return this._singleMode; }
     set singleMode(value) {
         if (value !== this._singleMode) {
-            if (value === true) {
-                this.hostElem.setAttribute('single', '');
-            } else {
-                this.hostElem.removeAttribute('single');
-            }
+            window.requestAnimationFrame(() => {
+                if (value === true) {
+                    this.hostElem.setAttribute('single', '');
+                } else {
+                    this.hostElem.removeAttribute('single');
+                }
+            });
             this._singleMode = value;
         }
     }
@@ -90,7 +92,9 @@ class MelodyPlayer extends HTMLElement {
         if (value !== this._playing) {
             this._playing = value;
             const elm = this.btnPlay;
-            elm.textContent = elm.dataset[value ? 'pause' : 'play'];
+            window.requestAnimationFrame(() => {
+                elm.textContent = elm.dataset[value ? 'pause' : 'play'];
+            });
             try { this.syncProgress(); } catch (e) { /* just ignore */ }
         }
     }
@@ -132,7 +136,7 @@ class MelodyPlayer extends HTMLElement {
                 const bf = this.lyrics[before];
                 if (bf) { bf.classList.remove('active'); }
                 const cur = this.lyrics[current];
-                cur.classList.add('active');
+                if (cur) { cur.classList.add('active'); }
                 let offset = 150 / 2
                     - cur.clientHeight / 2
                     - cur.offsetTop
@@ -148,20 +152,24 @@ class MelodyPlayer extends HTMLElement {
         if (value !== this._loopMode) {
             this._loopMode = value;
             const elm = this.btnLoop;
-            elm.textContent = elm.dataset[MelodyPlayer.LoopMode[value]];
+            window.requestAnimationFrame(() => {
+                elm.textContent = elm.dataset[MelodyPlayer.LoopMode[value]];
+            });
         }
     }
 
     get displayVisible() { return this._displayVisible; }
     set displayVisible(value) {
         if (value !== this._displayVisible) {
-            if (value === true) {
-                this.btnLyric.classList.add('flip');
-                this.containerDisplay.classList.add('active');
-            } else {
-                this.btnLyric.classList.remove('flip');
-                this.containerDisplay.classList.remove('active');
-            }
+            window.requestAnimationFrame(() => {
+                if (value === true) {
+                    this.btnLyric.classList.add('flip');
+                    this.containerDisplay.classList.add('active');
+                } else {
+                    this.btnLyric.classList.remove('flip');
+                    this.containerDisplay.classList.remove('active');
+                }
+            });
             this._displayVisible = value;
         }
     }
@@ -220,22 +228,13 @@ class MelodyPlayer extends HTMLElement {
 
     syncProgress() {
         /** @param {HTMLDivElement} elm */
-        function tiggerSeek(elm, t = 0.2) {
-            elm.classList.add('seek');
-            setTimeout(() => elm.classList.remove('seek'), t * 1000);
-        }
-        tiggerSeek(this.progressPlay);
-        tiggerSeek(this.progressLoad);
+        [this.progressPlay, this.progressLoad].forEach(elm => {
+            window.requestAnimationFrame(() => elm.classList.add('seek'));
+            setTimeout(() => {
+                window.requestAnimationFrame(() => elm.classList.remove('seek'));
+            }, 200);
+        });
         this.updateProgress();
-    }
-
-    /**
-     * remove all rendered lyric elements
-     */
-    clearLyric() {
-        const p = this.containerLyric;
-        let c = p.firstChild;
-        while (c) { p.removeChild(c), c = p.firstChild; }
     }
 
     /**
@@ -321,9 +320,11 @@ class MelodyPlayer extends HTMLElement {
             lyricElms.push(elm);
         }
         this.lyrics = lyricElms;
-        this.clearLyric();
-        this.containerLyric.appendChild(frag);
-        this.nextLyricIndex();
+        window.requestAnimationFrame(() => {
+            this.containerLyric.textContent = '';
+            this.containerLyric.appendChild(frag);
+            this.nextLyricIndex();
+        });
     }
 
     nextLyricIndex() {
@@ -490,8 +491,10 @@ class MelodyPlayer extends HTMLElement {
                 </div>
             </div>
         );
-        shadow.appendChild(style);
-        shadow.appendChild(this.hostElem);
+        window.requestAnimationFrame(() => {
+            shadow.appendChild(style);
+            shadow.appendChild(this.hostElem);
+        });
     }
 
     constructor() {
