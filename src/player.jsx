@@ -298,7 +298,7 @@ class MelodyPlayer extends HTMLElement {
         /** @type {Array.<{timestamp:number;content:string}>} */
         const subLrc = au.subLrc.lyrics.sort(cmp);
         /** @type {Array.<{timestamp:number;content:string}>} */
-        const lyrics = [{ timestamp: 0, content: '' }], lyricElms = [];
+        const lyrics = [{ timestamp: 0, content: '\n' }], lyricElms = [];
         let i = 0, j = 0;
         while (i < lrc.length || j < subLrc.length) {
             const l = lrc[i], sl = subLrc[j];
@@ -315,7 +315,7 @@ class MelodyPlayer extends HTMLElement {
         }
         const frag = document.createDocumentFragment();
         for (const line of lyrics) {
-            const elm = <p class='line' data-timestamp={line.timestamp}>{line.content}</p>;
+            const elm = <p class='line' data-timestamp={line.timestamp}>{line.content || '\n'}</p>;
             elm.timestamp = line.timestamp;
             frag.appendChild(elm);
             lyricElms.push(elm);
