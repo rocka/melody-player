@@ -31,29 +31,23 @@ const cfg = {
             {
                 test: /\.less$/,
                 use: [
-                    {
-                        loader: 'css-loader',
-                        options: {  minimize: isProd }
-                    },
+                    { loader: 'css-loader' },
                     { loader: 'less-loader' }
                 ]
             },
             {
                 test: /\.woff2$/,
-                use: { loader: 'url-loader'  }
+                use: { loader: 'url-loader' }
             }
         ]
     }
 };
 
 if (isProd) {
+    const CleanCSSPlugin = require('less-plugin-clean-css');
     cfg.devtool = 'source-map';
-    cfg.output.filename = '[name].min.js'
-    cfg.module.rules.forEach(rule => {
-        if (rule.use.loader === 'babel-loader') {
-            rule.use.options.presets = ['minify'];
-        }
-    })
+    cfg.output.filename = '[name].min.js';
+    cfg.module.rules[1].use[1].options = { plugins: [new CleanCSSPlugin({ level: 2 })] };
 }
 
 module.exports = cfg;
