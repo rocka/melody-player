@@ -14,15 +14,15 @@ export default function h(name, attr, ...children) {
                 case 'string':
                     elm.setAttribute(k, v);
                     break;
-                case 'function': // eslint-disable-line no-case-declarations
-                    const ev = k.replace(/^on/, '').toLowerCase();
+                case 'function':
+                    const ev = k.replace(/^on/, '').toLowerCase(); // eslint-disable-line no-case-declarations
                     elm.addEventListener(ev, v);
                     break;
             }
         });
     }
 
-    children.map(child => {
+    children.forEach(child => {
         if (typeof child === 'string') {
             elm.appendChild(document.createTextNode(child));
         } else {
