@@ -35,9 +35,7 @@ class MelodyPlayer extends HTMLElement {
         };
     }
 
-    static get LogTag() {
-        return '[MelodyPlayer]';
-    }
+    static get LogTag() { return '[MelodyPlayer]'; }
 
     static log(...args) {
         console.log(MelodyPlayer.LogTag, ...args); // eslint-disable-line no-console
@@ -476,7 +474,7 @@ class MelodyPlayer extends HTMLElement {
                 <div class="ctl">
                     <div class="ctl-left">
                         <button ref={r => this.btnPrev = r} onClick={() => this.handleNext(-1)}>skip_previous</button>
-                        <button ref={r => this.btnPlay = r} onClick={ev => this.handlePlayOrPause(ev)} data-play="play_arrow" data-pause="pause">stop</button>
+                        <button ref={r => this.btnPlay = r} onClick={() => this.handlePlayOrPause()} data-play="play_arrow" data-pause="pause">stop</button>
                         <button ref={r => this.btnNext = r} onClick={() => this.handleNext()}>skip_next</button>
                     </div>
                     <div ref={r => this.progressFull = r} onClick={ev => this.handleProgressSeek(ev)} class="porgress">
