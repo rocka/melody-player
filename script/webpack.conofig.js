@@ -23,7 +23,7 @@ const cfg = {
                     loader: 'babel-loader',
                     options: {
                         plugins: [
-                            ['transform-react-jsx', { pragma: 'h' }],
+                            ['@babel/plugin-transform-react-jsx', { pragma: 'h' }],
                         ]
                     }
                 }
