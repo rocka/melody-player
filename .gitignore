@@ -10,5 +10,6 @@ font/*
 !font/*.md
 !font/*.py
 !font/icon-names.txt
+!dist/preload.css
 !dist/player.min.js
 !dist/player.min.js.map
