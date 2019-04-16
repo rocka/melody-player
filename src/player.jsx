@@ -492,6 +492,7 @@ class MelodyPlayer extends HTMLElement {
         window.requestAnimationFrame(() => {
             shadow.appendChild(style);
             shadow.appendChild(this.hostElem);
+            this.setAttribute('rendered', '');
         });
     }
 
