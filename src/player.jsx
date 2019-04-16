@@ -225,8 +225,7 @@ class MelodyPlayer extends HTMLElement {
     }
 
     syncProgress() {
-        /** @param {HTMLDivElement} elm */
-        [this.progressPlay, this.progressLoad].forEach(elm => {
+        [this.progressPlay, this.progressLoad].forEach(/** @type {HTMLDivElement} */ elm => {
             window.requestAnimationFrame(() => elm.classList.add('seek'));
             setTimeout(() => {
                 window.requestAnimationFrame(() => elm.classList.remove('seek'));
@@ -237,6 +236,7 @@ class MelodyPlayer extends HTMLElement {
 
     /**
      * fetch lrc and attach them to audio element props
+     * @returns {Promise<Boolean>}
      */
     fetchLyric() {
         this.lyricStatus = 0; // Loading
@@ -248,31 +248,31 @@ class MelodyPlayer extends HTMLElement {
         // TODO: cache lyric; retry when cache invalid
         // maybe the browser would do it?
         /** @type {Promise<void>[]} */
-        const prom = Object.entries(urls)
-            .filter(i => i[1])
-            .map(([k, v]) => {
-                return fetch(v)
-                    .then(r => {
-                        if (r.status === 200) {
-                            return r.text();
-                        }
-                        throw r;
-                    })
-                    .then(t => {
-                        try {
-                            au[k] = Object.assign({ status: 1 }, Lrc.parse(t));
-                        } catch (e) {
-                            MelodyPlayer.err('parse lrc', e);
-                            au[k] = { status: 2, lyrics: [] }; // Failed
-                        }
-                    })
-                    .catch(e => {
-                        MelodyPlayer.err('fetch lyric', e);
-                        au[k] = { status: 2, lyrics: [] }; // Failed
-                    });
-            });
+        const tasks = [];
+        for (const type in urls) {
+            const lrcUrl = urls[type];
+            if (lrcUrl) {
+                const promise = fetch(lrcUrl).then(r => {
+                    if (r.ok) {
+                        return r.text();
+                    }
+                    throw r;
+                }).then(t => {
+                    try {
+                        au[type] = Object.assign({ status: 1 }, Lrc.parse(t));
+                    } catch (e) {
+                        MelodyPlayer.err('parse lrc', e);
+                        au[type] = { status: 2, lyrics: [] }; // Failed
+                    }
+                }).catch(e => {
+                    MelodyPlayer.err('fetch lyric', e);
+                    au[type] = { status: 2, lyrics: [] }; // Failed
+                });
+                tasks.push(promise);
+            }
+        }
         // if playIndex changed when fetching lyric, then shouldn't be rendered
-        return Promise.all(prom).then(() => au === this.au);
+        return Promise.all(tasks).then(() => au === this.au);
     }
 
     /**
@@ -461,7 +461,7 @@ class MelodyPlayer extends HTMLElement {
     }
 
     render() {
-        const shadow = this.attachShadow({ mode: 'open' });
+        const shadow = this.attachShadow({ mode: process.env.NODE_ENV === 'development' ? 'open' : 'closed' });
         const style = <style>{PLAYER_STYLE.toString()}</style>;
         this.hostElem = (
             <div class="__mld__">
@@ -548,19 +548,15 @@ class MelodyPlayer extends HTMLElement {
         this.btnLoop = null;
         /** @type {HTMLButtonElement} */
         this.btnLyric = null;
-        setTimeout(() => {
+        Promise.resolve().then(() => {
             Array.from(this.children)
                 .filter(elm => elm instanceof HTMLAudioElement)
                 .map(elm => this.registerAudio(elm));
             this.init();
             const evInit = { detail: { audios: this.audios } };
             this.dispatchEvent(new CustomEvent('ready', evInit));
-        }, 0);
+        });
         this.render();
-    }
-
-    connectedCallback() {
-        MelodyPlayer.log('connected.');
     }
 }
 
