@@ -2,6 +2,9 @@
   "name": "melody-player",
   "version": "0.2.0",
   "description": "WebComponent based audio player.",
+  "files": [
+    "dist"
+  ],
   "main": "dist/player.min.js",
   "scripts": {
     "build:dev": "node script/build.js --dev",
