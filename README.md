@@ -20,6 +20,8 @@ WebComponents polyfill: [webcomponents/webcomponentsjs][wcj]
 <html>
 <head>
     <script src="./dist/player.min.js"></script>
+    <!-- optional, but recommend placeholder style -->
+    <script src="./dist/preload.css"></script>
 </head>
 <body>
     <!-- single audio -->
