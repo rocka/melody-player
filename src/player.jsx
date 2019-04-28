@@ -37,6 +37,13 @@ class MelodyPlayer extends HTMLElement {
 
     static get LogTag() { return '[MelodyPlayer]'; }
 
+    static defineElement() {
+        if (!window.customElements.get(this.TagName)) {
+            window.customElements.define(this.TagName, this);
+            document.head.appendChild(<style>{PLAYER_FONT_FACE.toString()}</style>);
+        }
+    }
+
     static log(...args) {
         console.log(MelodyPlayer.LogTag, ...args); // eslint-disable-line no-console
     }
@@ -563,7 +570,10 @@ class MelodyPlayer extends HTMLElement {
     }
 }
 
-if (!window.customElements.get(MelodyPlayer.TagName)) {
-    window.customElements.define(MelodyPlayer.TagName, MelodyPlayer);
-    document.head.appendChild(<style>{PLAYER_FONT_FACE.toString()}</style>);
-}
+(cb => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+    } else {
+        cb();
+    }
+})(() => MelodyPlayer.defineElement());
