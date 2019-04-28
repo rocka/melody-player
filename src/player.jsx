@@ -269,6 +269,8 @@ class MelodyPlayer extends HTMLElement {
                     au[type] = { status: 2, lyrics: [] }; // Failed
                 });
                 tasks.push(promise);
+            } else {
+                au[type] = { status: 3, lyrics: [] }; // None
             }
         }
         // if playIndex changed when fetching lyric, then shouldn't be rendered
