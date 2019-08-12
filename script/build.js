@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const less = require('less');
 const webpack = require('webpack');
-const CleanCSSPlugin = require('less-plugin-clean-css');
+const CleanCSS = require('clean-css');
 
 if (process.argv.includes('--dev')) {
     process.env.NODE_ENV = 'development';
@@ -20,10 +20,9 @@ webpack(require('./webpack.conofig'), (err, stats) => {
 });
 
 const preloadCss = fs.readFileSync(path.join(__dirname, '../src/preload.less'), 'utf8');
-less.render(preloadCss, {
-    plugins: [new CleanCSSPlugin({ level: 2 })]
-}).then(r => {
-    fs.writeFileSync(path.join(__dirname, '../dist/preload.css'), r.css);
+less.render(preloadCss).then(r => {
+    const o = new CleanCSS({ level: 2 }).minify(r.css);
+    fs.writeFileSync(path.join(__dirname, '../dist/preload.css'), o.styles);
 }).catch(e => {
     console.error('Error when processing "preload.less":');
     console.error(e);

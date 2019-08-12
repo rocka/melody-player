@@ -44,10 +44,9 @@ const cfg = {
 };
 
 if (isProd) {
-    const CleanCSSPlugin = require('less-plugin-clean-css');
     cfg.devtool = 'source-map';
     cfg.output.filename = '[name].min.js';
-    cfg.module.rules[1].use[1].options = { plugins: [new CleanCSSPlugin({ level: 2 })] };
+    cfg.module.rules[1].use.splice(1, 0, { loader: 'clean-css-loader', options: { level: 2 } });
 }
 
 module.exports = cfg;
