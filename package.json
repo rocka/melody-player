@@ -25,17 +25,18 @@
   },
   "homepage": "https://github.com/rocka/melody-player#readme",
   "devDependencies": {
-    "@babel/core": "^7.4.3",
+    "@babel/core": "^7.5.5",
     "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "babel-loader": "^8.0.5",
-    "css-loader": "^2.1.1",
+    "babel-loader": "^8.0.6",
+    "clean-css": "^4.2.1",
+    "clean-css-loader": "^2.0.0",
+    "css-loader": "^3.2.0",
     "less": "^3.9.0",
-    "less-loader": "^4.1.0",
-    "less-plugin-clean-css": "^1.5.1",
-    "url-loader": "^1.1.2",
-    "webpack": "^4.30.0"
+    "less-loader": "^5.0.0",
+    "url-loader": "^2.1.0",
+    "webpack": "^4.39.1"
   },
   "dependencies": {
-    "lrc-kit": "^0.4.1"
+    "lrc-kit": "^1.0.0"
   }
 }
