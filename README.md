@@ -21,7 +21,7 @@ WebComponents polyfill: [webcomponents/webcomponentsjs][wcj]
 <head>
     <script src="./dist/player.min.js"></script>
     <!-- optional, but recommend placeholder style -->
-    <script src="./dist/preload.css"></script>
+    <link rel="stylesheet" href="./dist/preload.css">
 </head>
 <body>
     <!-- single audio -->
