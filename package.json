@@ -1,6 +1,6 @@
 {
   "name": "melody-player",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "WebComponent based audio player.",
   "files": [
     "dist"
