@@ -31,7 +31,7 @@ const cfg = {
             {
                 test: /\.less$/,
                 use: [
-                    { loader: 'css-loader' },
+                    { loader: 'css-loader', options: { sourceMap: false } },
                     { loader: 'less-loader' }
                 ]
             },

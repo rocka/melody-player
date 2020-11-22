@@ -1,6 +1,6 @@
 'use strict';
 
-const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
 const less = require('less');
 const webpack = require('webpack');
@@ -17,14 +17,15 @@ webpack(require('./webpack.conofig'), (err, stats) => {
     if (err || stats.hasErrors()) {
         process.exitCode = 1;
     }
-});
-
-const preloadCss = fs.readFileSync(path.join(__dirname, '../src/preload.less'), 'utf8');
-less.render(preloadCss).then(r => {
-    const o = new CleanCSS({ level: 2 }).minify(r.css);
-    fs.writeFileSync(path.join(__dirname, '../dist/preload.css'), o.styles);
-}).catch(e => {
-    console.error('Error when processing "preload.less":');
-    console.error(e);
-    process.exitCode = 1;
+    // build preload.css
+    fsp.readFile(path.join(__dirname, '../src/preload.less'), 'utf8').then(str => {
+        return less.render(str);
+    }).then(out => {
+        const o2 = new CleanCSS({ level: 2 }).minify(out.css);
+        fsp.writeFile(path.join(__dirname, '../dist/preload.css'), o2.styles);
+    }).catch(e => {
+        console.error('Error when processing "preload.less":');
+        console.error(e);
+        process.exitCode = 1;
+    });
 });
