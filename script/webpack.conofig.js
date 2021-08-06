@@ -37,7 +37,7 @@ const cfg = {
             },
             {
                 test: /\.woff2$/,
-                use: { loader: 'url-loader' }
+                type: 'asset/inline'
             }
         ]
     }
